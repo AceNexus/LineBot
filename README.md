@@ -9,20 +9,20 @@
 
 ## 功能特點
 
-- **可靠的 Webhook 處理**：透過簽名驗證機制，安全處理來自 LINE 平台的 webhook 請求
-- **訊息處理**：處理並回應 LINE 訊息
-- **健康監控**：用於監控服務狀態
-- **日誌記錄**：詳細的日誌記錄，便於除錯和監控
-- **Docker 支援**：容器化部署，確保跨環境的一致執行
-- **環境設定**：透過環境變數提供彈性配置
+- **可靠的 Webhook 處理**：透過簽名驗證機制，安全處理來自 LINE 平台的 webhook 請求。
+- **訊息處理**：處理並回應 LINE 訊息，包括文字、圖片等多種格式。
+- **健康監控**：用於監控服務狀態，確保服務正常運作。
+- **日誌記錄**：詳細的日誌記錄，便於除錯和監控。
+- **Docker 支援**：容器化部署，確保跨環境的一致執行。
+- **環境設定**：透過環境變數提供彈性配置。
 
 ## 專案架構
 
 ```
-├── app.py              # 應用程式入口點
+├── app.py              # 應用程式入口點，包含主要邏輯和路由設定
 ├── requirements.txt    # Python 依賴套件
-├── Dockerfile          # 容器定義檔
-└── .env.example        # 環境變數範本
+├── Dockerfile          # 容器定義檔，描述如何構建映像檔
+└── .env                # 環境變數範本，提供必要的配置
 ```
 
 ## 部署選項
@@ -45,9 +45,10 @@
 2. **設定環境變數**
 
    ```bash
-   cp env .env
-   # 編輯 .env 文件，填入您的 LINE 頻道憑證
+   nano .env
    ```
+
+   > 確保在 `.env` 文件中設定正確的環境變數，特別是必填項。
 
 3. **安裝依賴套件**
 
@@ -55,11 +56,15 @@
    pip install -r requirements.txt
    ```
 
+   > 確認所有依賴已正確安裝，避免運行時錯誤。
+
 4. **啟動服務**
+
    ```bash
    python app.py
    ```
-   服務將在 `http://localhost:8080` 可用
+
+   此時服務將在 `http://localhost:{PORT}` 可用，根據 `.env` 文件中設定的 `PORT` 變數（例如 8080）來訪問。
 
 ### Docker 部署
 
@@ -70,13 +75,26 @@
    ```
 
 2. **運行容器**
+   在運行容器之前，請確保 `.env` 文件中的 `PORT` 變數與以下命令中的端口一致。
 
    ```bash
    docker run -d -p 8080:8080 --name linemessagewebhook linemessagewebhook
    ```
 
 3. **確認狀態**
+
    ```bash
+   docker logs -f --tail 1000 linemessagewebhook
+   ```
+
+   > 使用此命令可以查看容器的運行日誌，幫助排查問題。
+
+4. **容器已存在，重新建構並運行容器**
+
+   ```bash
+   docker rm -f linemessagewebhook 2>/dev/null &&
+   docker build -t linemessagewebhook . &&
+   docker run --env-file .env -d -p 8080:8080 --name linemessagewebhook linemessagewebhook
    docker logs -f --tail 1000 linemessagewebhook
    ```
 
@@ -96,3 +114,12 @@
 | `LINE_CHANNEL_SECRET`       | LINE 頻道密鑰     | _必填_ |
 | `PORT`                      | 服務監聽的埠號    | `8080` |
 | `LOG_LEVEL`                 | 日誌記錄詳細程度  | `INFO` |
+
+## 常見問題
+
+1. **啟動服務失敗？**
+
+   - 請檢查是否已正確安裝所有依賴套件（如：Flask、line-bot-sdk、python-dotenv 等）。
+
+2. **收到 401 錯誤？**
+   - 請確認環境變數 `LINE_CHANNEL_ACCESS_TOKEN` 和 `LINE_CHANNEL_SECRET` 是否設定正確，並且與 LINE Developers 後台設定一致。

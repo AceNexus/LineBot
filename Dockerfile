@@ -16,5 +16,5 @@ COPY . /app/
 # 設定環境變數（選擇性）
 ENV FLASK_APP=app.py
 
-# 設定容器啟動命令，使用 gunicorn 啟動 Flask 應用
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+# 使用 sh -c 解析環境變數
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT app:app"]
