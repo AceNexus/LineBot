@@ -45,7 +45,7 @@
 2. **設定環境變數**
 
    ```bash
-   cp .env.example .env
+   cp env .env
    # 編輯 .env 文件，填入您的 LINE 頻道憑證
    ```
 
