@@ -1,25 +1,20 @@
-# 使用官方 Python 映像檔
-FROM python:3.11-slim
+# 使用官方的 Python 映像
+FROM python:3.10-slim
 
 # 設定工作目錄
 WORKDIR /app
 
-# 設定環境變數
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-# 複製依賴檔案進容器
-COPY requirements.txt ./
+# 複製 requirements.txt 到容器中
+COPY requirements.txt /app/
 
 # 安裝依賴
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 複製應用程式檔案進容器
-COPY app.py ./
-COPY .env ./.env
+# 複製應用程式代碼到容器中
+COPY . /app/
 
-# 暴露應用程式端口
-EXPOSE 8080
+# 設定環境變數（選擇性）
+ENV FLASK_APP=app.py
 
-# 使用 gunicorn 啟動應用
+# 設定容器啟動命令，使用 gunicorn 啟動 Flask 應用
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]

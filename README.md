@@ -66,12 +66,18 @@
 1. **建立 Docker 映像檔**
 
    ```bash
-   docker build -t line-message-webhook:latest .
+   docker build -t linemessagewebhook .
    ```
 
 2. **運行容器**
+
    ```bash
-   docker run -d -p 8080:8080 --env-file .env --name line-webhook line-message-webhook:latest
+   docker run -d -p 8080:8080 --name linemessagewebhook linemessagewebhook
+   ```
+
+3. **確認狀態**
+   ```bash
+   docker logs -f --tail 1000 linemessagewebhook
    ```
 
 ## API 端點
