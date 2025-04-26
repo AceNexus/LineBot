@@ -1,25 +1,25 @@
 # 使用官方 Python 映像檔
 FROM python:3.11-slim
 
-# 設定台北時區
-ENV TZ=Asia/Taipei
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    echo $TZ > /etc/timezone && \
-    apt-get update && \
-    apt-get install -y tzdata && \
-    rm -rf /var/lib/apt/lists/*
-
 # 設定工作目錄
 WORKDIR /app
 
+# 設定環境變數
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 # 複製依賴檔案進容器
-COPY requirements.txt ./ 
+COPY requirements.txt ./
 
 # 安裝依賴
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 複製應用程式檔案進容器
-COPY lineMessageNews.py ./
+COPY app.py ./
+COPY .env ./.env
 
-# 預設執行指令
-CMD ["python", "lineMessageNews.py"]
+# 暴露應用程式端口
+EXPOSE 8080
+
+# 使用 gunicorn 啟動應用
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
