@@ -19,10 +19,31 @@
 ## 專案架構
 
 ```
-├── app.py              # 應用程式入口點，包含主要邏輯和路由設定
-├── requirements.txt    # Python 依賴套件
-├── Dockerfile          # 容器定義檔，描述如何構建映像檔
-└── .env                # 環境變數範本，提供必要的配置
+linemessagewebhook/
+├── app/                         # 主程式目錄
+│   ├── api/                     # 所有 route (views)
+│   │   └── v1/                  # API 版本 v1
+│   │       └── __init__.py      # 定義 blueprint
+│   ├── models/                  # 資料庫模型 (ORM Models)
+│   │   └── __init__.py
+│   ├── services/                # 業務邏輯層 (Service Layer)
+│   │   └── __init__.py
+│   ├── utils/                   # 工具類別 (小工具、helper)
+│   │   └── __init__.py
+│   ├── __init__.py              # create_app(), 組合 app
+│   ├── extensions.py            # 初始化第三方擴充 (db, redis, etc)
+│   ├── config.py                # 設定檔 (Dev/Prod/Test)
+│   └── logger.py                # 設置日誌
+├── migrations/                  # 資料庫遷移檔 (Flask-Migrate)
+├── tests/                       # 測試
+│   └── __init__.py
+├── .env                         # 環境變數
+├── .gitignore                   # Git 忽略規則
+├── app.py                       # 專案開發入口 (for local run)
+├── Dockerfile                   # Docker 建構
+├── README.md                    # 說明文件
+├── requirements.txt             # Python 套件列表
+└── wsgi.py                      # 正式部署 WSGI 入口 (for gunicorn)
 ```
 
 ## 部署選項
@@ -64,7 +85,7 @@
    python app.py
    ```
 
-   此時服務將在 `http://localhost:{PORT}` 可用，根據 `.env` 文件中設定的 `PORT` 變數（例如 8080）來訪問。
+   此時服務將在 `http://localhost:{PORT}` 可用，根據 `.env` 文件中設定的 `PORT` 變數（例如 5000）來訪問。
 
 ### Docker 部署
 
@@ -78,7 +99,7 @@
    在運行容器之前，請確保 `.env` 文件中的 `PORT` 變數與以下命令中的端口一致。
 
    ```bash
-   docker run -d -p 8080:8080 --name linemessagewebhook linemessagewebhook
+   docker run -d -p 5000:5000 --name linemessagewebhook linemessagewebhook
    ```
 
 3. **確認狀態**
@@ -94,7 +115,7 @@
    ```bash
    docker rm -f linemessagewebhook 2>/dev/null &&
    docker build -t linemessagewebhook . &&
-   docker run --env-file .env -d -p 8080:8080 --name linemessagewebhook linemessagewebhook
+   docker run --env-file .env -d -p 5000:5000 --name linemessagewebhook linemessagewebhook
    docker logs -f --tail 1000 linemessagewebhook
    ```
 
@@ -112,7 +133,7 @@
 | --------------------------- | ----------------- | ------ |
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE 頻道存取令牌 | _必填_ |
 | `LINE_CHANNEL_SECRET`       | LINE 頻道密鑰     | _必填_ |
-| `PORT`                      | 服務監聽的埠號    | `8080` |
+| `PORT`                      | 服務監聽的埠號    | `5000` |
 | `LOG_LEVEL`                 | 日誌記錄詳細程度  | `INFO` |
 
 ## 常見問題

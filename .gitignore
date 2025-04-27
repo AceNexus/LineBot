@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# 虛擬環境
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# 日誌文件
+*.log
+
+# 環境變數文件
+.env
+
+# IDE 設定文件
+.vscode/
+.idea/
+
+# 測試輸出
+coverage/
+*.cover
+nosetests.xml
+coverage.xml
+*.coveragerc
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# 其他
+*.egg-info/
+dist/
+build/
