@@ -66,7 +66,7 @@ linemessagewebhook/
 
    ```bash
    git clone https://github.com/yourusername/line-message-webhook.git
-   cd line-message-webhook
+   cd line_message_webhook
    ```
 
 2. **設定環境變數**
@@ -95,20 +95,35 @@ linemessagewebhook/
 
 ### Docker 部署
 
-1. **建立 Docker 映像檔**
+1. **Clone 儲存庫**
+
+   ```bash
+   git clone git@github.com:MinHao1103/line_message_webhook.git
+   cd line_message_webhook
+   ```
+
+2. **設定環境變數**
+
+   ```bash
+   nano .env
+   ```
+
+   > 確保在 `.env` 文件中設定正確的環境變數，特別是必填項。
+
+3. **建立 Docker 映像檔**
 
    ```bash
    docker build -t linemessagewebhook .
    ```
 
-2. **運行容器**
+4. **運行容器**
    在運行容器之前，請確保 `.env` 文件中的 `PORT` 變數與以下命令中的端口一致。
 
    ```bash
    docker run -d -p 5000:5000 --name linemessagewebhook linemessagewebhook
    ```
 
-3. **確認狀態**
+5. **確認狀態**
 
    ```bash
    docker logs -f --tail 1000 linemessagewebhook
@@ -116,7 +131,7 @@ linemessagewebhook/
 
    > 使用此命令可以查看容器的運行日誌，幫助排查問題。
 
-4. **容器已存在，重新建構並運行容器**
+6. **容器已存在，重新建構並運行容器**
 
    ```bash
    docker rm -f linemessagewebhook 2>/dev/null &&
