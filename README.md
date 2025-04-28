@@ -20,30 +20,36 @@
 
 ```
 linemessagewebhook/
-├── app/                         # 主程式目錄
-│   ├── api/                     # 所有 route (views)
-│   │   └── v1/                  # API 版本 v1
-│   │       └── __init__.py      # 定義 blueprint
-│   ├── models/                  # 資料庫模型 (ORM Models)
-│   │   └── __init__.py
-│   ├── services/                # 業務邏輯層 (Service Layer)
-│   │   └── __init__.py
-│   ├── utils/                   # 工具類別 (小工具、helper)
-│   │   └── __init__.py
-│   ├── __init__.py              # create_app(), 組合 app
-│   ├── extensions.py            # 初始化第三方擴充 (db, redis, etc)
-│   ├── config.py                # 設定檔 (Dev/Prod/Test)
-│   └── logger.py                # 設置日誌
-├── migrations/                  # 資料庫遷移檔 (Flask-Migrate)
-├── tests/                       # 測試
-│   └── __init__.py
-├── .env                         # 環境變數
-├── .gitignore                   # Git 忽略規則
-├── app.py                       # 專案開發入口 (for local run)
-├── Dockerfile                   # Docker 建構
-├── README.md                    # 說明文件
-├── requirements.txt             # Python 套件列表
-└── wsgi.py                      # 正式部署 WSGI 入口 (for gunicorn)
+├── app/                                 # 主應用程式目錄
+│   ├── api/                             # API 相關程式碼
+│   │   ├── v1/                          # API v1 版本的路由
+│   │   │   ├── __init__.py              # v1 目錄初始化
+│   │   │   └── routes.py                # API 路由定義
+│   │   └── __init__.py                  # api 目錄初始化
+│   ├── handlers/                        # 事件處理和外部通知邏輯
+│   │   ├── __init__.py                  # handlers 目錄初始化
+│   │   ├── line_webhook_processor.py    # 處理 Webhook 請求的邏輯
+│   │   └── message_processor.py         # 處理 LINE 訊息的邏輯
+│   ├── models/                          # 資料模型 (Model)
+│   │   └── __init__.py                  # models 目錄初始化
+│   ├── services/                        # 商業邏輯 (Service)
+│   │   └── __init__.py                  # services 目錄初始化
+│   ├── utils/                           # 工具函式 (Utilities)
+│   │   └── __init__.py                  # utils 目錄初始化
+│   ├── __init__.py                      # app 目錄初始化
+│   ├── config.py                        # 設定檔，例如環境變數
+│   ├── extensions.py                    # 擴充功能（像是 DB、快取等初始化）
+│   └── logger.py                        # 日誌 (Logger) 設定
+├── migrations/                          # 資料庫遷移檔案（例如 Alembic）
+├── tests/                               # 測試程式碼
+│   └── __init__.py                      # tests 目錄初始化
+├── .env                                 # 環境變數設定檔
+├── .gitignore                           # Git 忽略規則
+├── app.py                               # 主程式入口 (Application Entrypoint)
+├── Dockerfile                           # Docker 建置設定檔
+├── README.md                            # 專案說明文件
+├── requirements.txt                     # Python 套件需求列表
+└── wsgi.py                              # WSGI 伺服器啟動檔（例如給 gunicorn 用）
 ```
 
 ## 部署選項

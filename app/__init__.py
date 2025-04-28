@@ -25,4 +25,7 @@ def create_app():
     from app.api import init_app
     init_app(app)
 
+    # 導入處理器以確保它們被註冊
+    from app.handlers.message_processor import process_text_message
+    
     return app

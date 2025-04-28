@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify
+from app.handlers.line_webhook_processor import process_line_webhook
 
 # 定義主藍圖
 main_blueprint = Blueprint('main', __name__)
@@ -10,6 +11,10 @@ def home():
 @main_blueprint.route('/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "healthy"}), 200
+
+@main_blueprint.route('/webhook', methods=['POST'])
+def webhook():
+    return process_line_webhook()
 
 # app/api/v1/__init__.py
 from .v1.routes import api_v1_blueprint
