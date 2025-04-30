@@ -28,8 +28,7 @@ linemessagewebhook/
 │   │   └── __init__.py                  # api 目錄初始化
 │   ├── handlers/                        # 事件處理和外部通知邏輯
 │   │   ├── __init__.py                  # handlers 目錄初始化
-│   │   ├── line_webhook_processor.py    # 處理 Webhook 請求的邏輯
-│   │   └── message_processor.py         # 處理 LINE 訊息的邏輯
+│   │   └── line_message_handlers.py     # 處理 Webhook 請求的邏輯
 │   ├── models/                          # 資料模型 (Model)
 │   │   └── __init__.py                  # models 目錄初始化
 │   ├── services/                        # 商業邏輯 (Service)
@@ -45,7 +44,7 @@ linemessagewebhook/
 │   └── __init__.py                      # tests 目錄初始化
 ├── .env                                 # 環境變數設定檔
 ├── .gitignore                           # Git 忽略規則
-├── app.py                               # 主程式入口 (Application Entrypoint)
+├── main.py                               # 主程式入口 (Application Entrypoint)
 ├── Dockerfile                           # Docker 建置設定檔
 ├── README.md                            # 專案說明文件
 ├── requirements.txt                     # Python 套件需求列表
@@ -88,7 +87,7 @@ linemessagewebhook/
 4. **啟動服務**
 
    ```bash
-   python app.py
+   python main.py
    ```
 
    此時服務將在 `http://localhost:{PORT}` 可用，根據 `.env` 文件中設定的 `PORT` 變數（例如 5000）來訪問。
@@ -142,26 +141,26 @@ linemessagewebhook/
 
 ## API 端點
 
-| 端點       | 方法 | 說明                                     |
-| ---------- | ---- | ---------------------------------------- |
-| `/`        | GET  | 服務資訊頁面                             |
-| `/health`  | GET  | 用於監控的健康檢查端點                   |
+| 端點         | 方法   | 說明                          |
+|------------|------|-----------------------------|
+| `/`        | GET  | 服務資訊頁面                      |
+| `/health`  | GET  | 用於監控的健康檢查端點                 |
 | `/webhook` | POST | LINE 平台 webhook 接收器（需要簽名驗證） |
 
 ## 配置參數
 
-| 環境變數                    | 說明              | 預設值 |
-| --------------------------- | ----------------- | ------ |
-| `LINE_CHANNEL_ACCESS_TOKEN` | LINE 頻道存取令牌 | _必填_ |
-| `LINE_CHANNEL_SECRET`       | LINE 頻道密鑰     | _必填_ |
-| `PORT`                      | 服務監聽的埠號    | `5000` |
-| `LOG_LEVEL`                 | 日誌記錄詳細程度  | `INFO` |
+| 環境變數                        | 說明          | 預設值    |
+|-----------------------------|-------------|--------|
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE 頻道存取令牌 | _必填_   |
+| `LINE_CHANNEL_SECRET`       | LINE 頻道密鑰   | _必填_   |
+| `PORT`                      | 服務監聽的埠號     | `5000` |
+| `LOG_LEVEL`                 | 日誌記錄詳細程度    | `INFO` |
 
 ## 常見問題
 
 1. **啟動服務失敗？**
 
-   - 請檢查是否已正確安裝所有依賴套件（如：Flask、line-bot-sdk、python-dotenv 等）。
+    - 請檢查是否已正確安裝所有依賴套件（如：Flask、line-bot-sdk、python-dotenv 等）。
 
 2. **收到 401 錯誤？**
-   - 請確認環境變數 `LINE_CHANNEL_ACCESS_TOKEN` 和 `LINE_CHANNEL_SECRET` 是否設定正確，並且與 LINE Developers 後台設定一致。
+    - 請確認環境變數 `LINE_CHANNEL_ACCESS_TOKEN` 和 `LINE_CHANNEL_SECRET` 是否設定正確，並且與 LINE Developers 後台設定一致。

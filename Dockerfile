@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # 設定環境變數（選擇性）
-ENV FLASK_APP=app.py
+ENV FLASK_APP=main.py
 
 # 使用 sh -c 解析環境變數
 CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT app:app"]

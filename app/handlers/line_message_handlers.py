@@ -1,8 +1,11 @@
-from app.extensions import line_bot_api, handler
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import logging
 
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
+
+from app.extensions import line_bot_api, handler
+
 logger = logging.getLogger(__name__)
+
 
 @handler.add(MessageEvent, message=TextMessage)
 def process_text_message(event):
