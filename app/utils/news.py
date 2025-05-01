@@ -48,7 +48,7 @@ def shorten_url(long_url):
     params = {"url": long_url}
 
     try:
-        response = requests.get(api_url, params=params, timeout=5, verify=False)
+        response = requests.get(api_url, params=params, timeout=5)
         response.raise_for_status()
         return response.text
     except requests.RequestException as e:

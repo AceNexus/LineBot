@@ -4,6 +4,7 @@ import random
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
 from app.extensions import line_bot_api, handler
+from app.services import groq_service
 from app.utils.news import get_news
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,9 @@ def process_text_message(event):
         logger.info(f"Received text message from {user_id}: {message_text}")
 
         # 根據用戶輸入選擇回應
-        if "1" in message_text:
+        if "啊哇呾喀呾啦" in message_text:
+            response_text = f"請輸入數字選擇查詢項目：\n1. 新聞\n2. 電影\n3. 每日日文單字\n4. 每日英文單字\n5. 其他"
+        elif "1" in message_text:
             response_text = get_news()
         elif "2" in message_text:
             response_text = get_movies()
@@ -26,8 +29,9 @@ def process_text_message(event):
             response_text = get_japanese_word_of_the_day()
         elif "4" in message_text:
             response_text = get_english_word_of_the_day()
-        elif "啊哇呾喀呾啦" in message_text:
-            response_text = f"請輸入數字選擇查詢項目：\n1. 新聞\n2. 電影\n3. 每日日文單字\n4. 每日英文單字\n5. 其他"
+        else:
+            # 沒有符合條件的輸入，調用 Groq 語言模型處理
+            response_text = groq_service.chat_with_groq(user_id, message_text)
 
         line_bot_api.reply_message(
             event.reply_token,

@@ -23,32 +23,34 @@ linemessagewebhook/
 ├── app/                                 # 主應用程式目錄
 │   ├── api/                             # API 相關程式碼
 │   │   ├── v1/                          # API v1 版本的路由
-│   │   │   ├── __init__.py              # v1 目錄初始化
-│   │   │   └── routes.py                # API 路由定義
-│   │   └── __init__.py                  # api 目錄初始化
-│   ├── handlers/                        # 事件處理和外部通知邏輯
-│   │   ├── __init__.py                  # handlers 目錄初始化
-│   │   └── line_message_handlers.py     # 處理 Webhook 請求的邏輯
-│   ├── models/                          # 資料模型 (Model)
-│   │   └── __init__.py                  # models 目錄初始化
-│   ├── services/                        # 商業邏輯 (Service)
-│   │   └── __init__.py                  # services 目錄初始化
-│   ├── utils/                           # 工具函式 (Utilities)
-│   │   └── __init__.py                  # utils 目錄初始化
-│   ├── __init__.py                      # app 目錄初始化
-│   ├── config.py                        # 設定檔，例如環境變數
-│   ├── extensions.py                    # 擴充功能（像是 DB、快取等初始化）
-│   └── logger.py                        # 日誌 (Logger) 設定
-├── migrations/                          # 資料庫遷移檔案（例如 Alembic）
-├── tests/                               # 測試程式碼
-│   └── __init__.py                      # tests 目錄初始化
-├── .env                                 # 環境變數設定檔
+│   │   │   ├── __init__.py              # v1 初始化
+│   │   │   └── routes.py                # API v1 路由定義
+│   │   └── __init__.py                  # api 初始化
+│   ├── handlers/                        # 處理外部 webhook、通知等
+│   │   ├── __init__.py
+│   │   └── line_message_handlers.py     # 處理 LINE Webhook 請求
+│   ├── models/                          # 資料模型定義
+│   │   └── __init__.py
+│   ├── services/                        # 商業邏輯與外部服務整合
+│   │   ├── __init__.py
+│   │   └── groq_service.py              # Groq API 整合邏輯封裝
+│   ├── utils/                           # 工具函式（輔助性功能）
+│   │   ├── news.py                      # 取得新聞相關工具
+│   │   └── __init__.py
+│   ├── __init__.py
+│   ├── config.py                        # 設定檔（例如環境變數存取）
+│   ├── extensions.py                    # 擴充模組初始化（DB、快取等）
+│   └── logger.py                        # 日誌設定
+├── migrations/                          # 資料庫遷移檔案
+├── tests/                               # 單元測試程式碼
+│   └── __init__.py
+├── .env                                 # 儲存環境變數
 ├── .gitignore                           # Git 忽略規則
-├── main.py                               # 主程式入口 (Application Entrypoint)
-├── Dockerfile                           # Docker 建置設定檔
+├── main.py                              # 主應用程式入口
+├── Dockerfile                           # Docker 建置設定
 ├── README.md                            # 專案說明文件
-├── requirements.txt                     # Python 套件需求列表
-└── wsgi.py                              # WSGI 伺服器啟動檔（例如給 gunicorn 用）
+├── requirements.txt                     # 套件安裝需求清單
+└── wsgi.py                              # WSGI 啟動器，供 Gunicorn 使用
 ```
 
 ## 部署選項
@@ -64,7 +66,7 @@ linemessagewebhook/
 1. **Clone 儲存庫**
 
    ```bash
-   git clone https://github.com/yourusername/line-message-webhook.git
+   git clone https://github.com/AceNexus/AceLineBot.git
    cd line_message_webhook
    ```
 
@@ -97,7 +99,7 @@ linemessagewebhook/
 1. **Clone 儲存庫**
 
    ```bash
-   git clone git@github.com:MinHao1103/line_message_webhook.git
+   git clone git@github.com:AceNexus/AceLineBot.git
    cd line_message_webhook
    ```
 
@@ -112,20 +114,20 @@ linemessagewebhook/
 3. **建立 Docker 映像檔**
 
    ```bash
-   docker build -t linemessagewebhook .
+   docker build -t acelinebot .
    ```
 
 4. **運行容器**
    在運行容器之前，請確保 `.env` 文件中的 `PORT` 變數與以下命令中的端口一致。
 
    ```bash
-   docker run -d -p 5000:5000 --name linemessagewebhook linemessagewebhook
+   docker run -d -p 5000:5000 --name acelinebot acelinebot
    ```
 
 5. **確認狀態**
 
    ```bash
-   docker logs -f --tail 1000 linemessagewebhook
+   docker logs -f --tail 1000 acelinebot
    ```
 
    > 使用此命令可以查看容器的運行日誌，幫助排查問題。
@@ -133,10 +135,10 @@ linemessagewebhook/
 6. **容器已存在，重新建構並運行容器**
 
    ```bash
-   docker rm -f linemessagewebhook 2>/dev/null &&
-   docker build -t linemessagewebhook . &&
-   docker run --env-file .env -d -p 5000:5000 --name linemessagewebhook linemessagewebhook
-   docker logs -f --tail 1000 linemessagewebhook
+   docker rm -f acelinebot 2>/dev/null &&
+   docker build -t acelinebot . &&
+   docker run --env-file .env -d -p 5000:5000 --name acelinebot acelinebot
+   docker logs -f --tail 1000 acelinebot
    ```
 
 ## API 端點
