@@ -20,14 +20,14 @@ def process_text_message(event):
 
         # 根據用戶輸入選擇回應
         if "啊哇呾喀呾啦" in message_text:
-            response_text = f"請輸入數字選擇查詢項目：\n1. 新聞\n2. 電影\n3. 每日日文單字\n4. 每日英文單字\n5. 其他"
-        elif "1" in message_text:
+            response_text = f"請輸入數字選擇查詢項目：\n1. 新聞\n2. 電影\n3. 每日日文單字\n4. 每日英文單字\n"
+        elif message_text.strip() == "1":
             response_text = get_news()
-        elif "2" in message_text:
+        elif message_text.strip() == "2":
             response_text = get_movies()
-        elif "3" in message_text:
+        elif message_text.strip() == "3":
             response_text = get_japanese_word_of_the_day()
-        elif "4" in message_text:
+        elif message_text.strip() == "4":
             response_text = get_english_word_of_the_day()
         else:
             # 沒有符合條件的輸入，調用 Groq 語言模型處理
