@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 URL = 'https://news.google.com/topics/CAAqKggKIiRDQkFTRlFvSUwyMHZNRFZxYUdjU0JYcG9MVlJYR2dKVVZ5Z0FQAQ?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant'
 
 
-def get_news():
-    return fetch_google_news_text(1)
+def get_news(count):
+    return fetch_google_news_text(count)
 
 
-def fetch_google_news_text(count=1):
+def fetch_google_news_text(count):
     try:
         response = requests.get(URL, timeout=10)
         response.raise_for_status()
@@ -36,7 +36,7 @@ def fetch_google_news_text(count=1):
                 if len(results) >= count:
                     break
 
-        return '\n'.join([f"{title}\n{short_url}" for title, short_url in results])
+        return '\n\n'.join([f"{title}\n{short_url}" for title, short_url in results])
 
     except requests.RequestException as e:
         logger.error(f"Failed to retrieve Google News content: {e}")
