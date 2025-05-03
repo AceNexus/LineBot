@@ -1,6 +1,6 @@
 import logging
 
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
 
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
@@ -21,6 +21,7 @@ def process_text_message(event):
     try:
         message_text = event.message.text
         user_id = event.source.user_id
+
         logger.info(f"Received text message from {user_id}: {message_text}")
 
         # 處理用戶輸入並獲取回應
@@ -35,11 +36,17 @@ def process_text_message(event):
             logger.error("Failed to send error message to user")
 
 
-def reply_to_user(reply_token, text):
-    line_bot_api.reply_message(
-        reply_token,
-        TextSendMessage(text=text)
-    )
+def reply_to_user(reply_token, message):
+    # 處理字串類型，轉為 TextSendMessage
+    if isinstance(message, str):
+        message = TextSendMessage(text=message)
+
+    # 檢查是否為有效的訊息類型
+    if not (isinstance(message, list) or isinstance(message, (TextSendMessage, FlexSendMessage))):
+        raise TypeError("不支援的訊息類型，請使用字串、TextSendMessage、FlexSendMessage 或這些物件的列表")
+
+    # 發送訊息
+    line_bot_api.reply_message(reply_token, message)
 
 
 # 檢查用戶輸入並回應
