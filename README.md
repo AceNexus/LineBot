@@ -100,7 +100,7 @@ linemessagewebhook/
 
    ```bash
    git clone git@github.com:AceNexus/AceLineBot.git
-   cd line_message_webhook
+   cd AceLineBot
    ```
 
 2. **設定環境變數**
