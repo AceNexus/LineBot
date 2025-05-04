@@ -63,11 +63,11 @@ def process_user_input(user_id, message_text):
     if user_state.get(user_id) == "awaiting_news_count":
         if msg.isdigit():
             count = int(msg)
-            if 1 <= count <= 3:  # 限制為 1-3 篇，與提示一致
+            if 1 <= count <= 10:  # 限制為 1-10 篇，與提示一致
                 user_state.pop(user_id, None)  # 清除狀態
                 return get_news(count)
             else:
-                return "請輸入有效的數字（1～3）"
+                return "請輸入有效的數字（1～10）"
         else:
             # 如果用戶在等待數字時輸入了非數字內容
             if msg in ["路摸思", "lumos"]:
@@ -75,12 +75,12 @@ def process_user_input(user_id, message_text):
                 user_state.pop(user_id, None)
                 # 繼續執行下面的命令處理邏輯
             else:
-                return "請輸入數字 1～3 來選擇新聞數量，或輸入 0 返回主選單"
+                return "請輸入數字 1～10 來選擇新聞數量，或輸入 0 返回主選單"
 
     # 處理主選單選項
     if msg == "1":
         user_state[user_id] = "awaiting_news_count"
-        return "請輸入想查看的新聞數量（1～3）："
+        return "請輸入想查看的新聞數量（1～10）："
     elif msg == "2":
         return get_movies()
     elif msg == "3":
