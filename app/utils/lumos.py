@@ -1,16 +1,7 @@
-import logging
-
 from linebot.models import (
-    FlexSendMessage,
-    BubbleContainer,
-    BoxComponent,
-    TextComponent,
-    ButtonComponent,
-    URIAction,
-    SeparatorComponent
+    BubbleContainer, FlexSendMessage, BoxComponent,
+    TextComponent, URIAction
 )
-
-logger = logging.getLogger(__name__)
 
 
 def get_lumos():
@@ -44,11 +35,11 @@ def get_lumos():
         ("Java", "https://pse.is/7j2gk2"),
         ("Spring Boot (1)", "https://pse.is/7j2jtm"),
         ("Spring Boot (2)", "https://pse.is/7j2gu8"),
-        ("JMS", "https://pse.is/7j2gxm"),
+        ("Java Message Service", "https://pse.is/7j2gxm"),
         ("ActiveMQ", "https://pse.is/7j2jaf"),
-        ("Eureka", "https://pse.is/7j2gyt"),
-        ("Config", "https://pse.is/7j2gzd"),
-        ("Gateway", "https://pse.is/7j2gzs"),
+        ("Spring Cloud Eureka", "https://pse.is/7j2gyt"),
+        ("Spring Cloud Config", "https://pse.is/7j2gzd"),
+        ("Spring Cloud Gateway", "https://pse.is/7j2gzs"),
         ("Docker", "https://pse.is/7j2gvc"),
         ("Nginx", "https://pse.is/7j2gw5"),
         ("Database", "https://pse.is/7j2gwq"),
@@ -57,17 +48,27 @@ def get_lumos():
     ]
 
     footer_contents = []
-    for i, (name, url) in enumerate(resources):
-        footer_contents.append(ButtonComponent(
-            style="link",
-            height="sm",
-            action=URIAction(label=name, uri=url)
+
+    for name, url in resources:
+        footer_contents.append(BoxComponent(
+            layout="vertical",
+            contents=[
+                TextComponent(
+                    text=name,
+                    size="md",
+                    weight="bold",
+                    color="#1DB446",
+                    align="center",
+                    wrap=True,
+                    action=URIAction(label=name, uri=url)
+                )
+            ],
+            padding_all="md",
+            border_color="#1DB446",
+            border_width="normal",
+            corner_radius="md",
+            margin="sm"
         ))
-        # 加分隔線（除了最後一項）
-        if i < len(resources) - 1:
-            footer_contents.append(SeparatorComponent(
-                margin="md"
-            ))
 
     footer_box = BoxComponent(
         layout="vertical",
