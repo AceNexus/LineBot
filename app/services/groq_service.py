@@ -81,6 +81,7 @@ def chat_with_groq(user_id: str, message: str, model: str = "llama-3.3-70b-versa
                 model=current_model,
                 temperature=0.7,  # 適當的創意度
                 max_tokens=1000,  # 限制回覆長度
+                timeout=10
             )
 
             # 取得模型回應
