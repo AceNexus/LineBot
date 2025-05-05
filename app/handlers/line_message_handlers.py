@@ -86,7 +86,7 @@ def process_user_input(user_id, message_text):
     elif msg == "3":
         return get_japanese_word()
     elif msg == "4":
-        return get_english_word()
+        return get_english_word(user_id)
     elif msg in ["路摸思", "lumos"]:  # 哈利波特咒語的參考，顯示隱藏功能
         return get_lumos()
     else:

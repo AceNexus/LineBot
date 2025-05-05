@@ -9,26 +9,25 @@ from app.services.groq_service import chat_with_groq
 logger = logging.getLogger(__name__)
 
 
-def get_english_word():
+def get_english_word(user_id: str):
     """
     使用 Groq AI 提供英文單字學習內容
     功能：獲取一個日常生活中常用的英文單字或表達方式，並提供完整的學習資訊
     返回：包含單字、發音、詞性、英文解釋、中文意思、例句及翻譯的完整學習內容
     """
-    system_id = "english_word_system"
+    prompt = """請提供一個英文單字的學習內容，包含以下欄位：
 
-    prompt = """請提供一個英文單字學習內容，包含以下部分：
     1. 單字 (word)
-    2. 發音，使用台灣常用的 KK 音標 (pronunciation)
-    3. 詞性 (part of speech)
-    4. 英文解釋 (definition in English)
-    5. 中文意思 (definition in Chinese)
-    6. 例句 (example sentence)
-    7. 例句翻譯 (translation of example)
+    2. 發音（使用台灣常見的 KK 音標）(pronunciation)
+    3. 詞性 (part_of_speech)
+    4. 英文解釋 (definition_en)
+    5. 中文解釋 (definition_zh)
+    6. 例句 (example_sentence)
+    7. 例句翻譯 (example_translation)
 
-    請提供一個日常生活中常用、但詞彙難度略高（如 CEFR B1~B2 級），能提升英文口說或寫作層次的實用單字或表達方式，適合一般對話或正式場合使用。
+    請選擇難度符合台灣常見的「三千單」詞彙等級（如全民英檢中級、CEFR B1 級）的單字，應為日常生活中常見且實用的詞彙，能夠提升口說與寫作能力，適用於一般對話或正式場合。
 
-    請依照上述項目，以 **純 JSON 格式回覆**，**不要包含多餘文字或說明**，並且確認資訊準確。
+    請以 **純 JSON 格式** 回覆，**不要添加多餘說明或文字**，並請確認所有資訊準確無誤。
 
     以下為格式範例：
     {
@@ -42,7 +41,7 @@ def get_english_word():
     }
     """
 
-    response = chat_with_groq(system_id, prompt)
+    response = chat_with_groq(user_id, prompt)
 
     try:
         if isinstance(response, str):
@@ -77,7 +76,6 @@ def get_english_word():
 
     except Exception as e:
         logger.error(f"Failed to parse response as JSON: {str(e)}")
-        logger.debug(f"Original response: {str(response)[:500]}")
 
         # 提供默認單字資訊作為備用
         word_data = {
