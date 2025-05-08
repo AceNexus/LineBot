@@ -19,7 +19,7 @@
 ## 專案架構
 
 ```
-linemessagewebhook/
+linebot/
 ├── app/                                 # 主應用程式目錄
 │   ├── api/                             # API 相關程式碼
 │   │   ├── v1/                          # API v1 版本的路由
@@ -66,8 +66,8 @@ linemessagewebhook/
 1. **Clone 儲存庫**
 
    ```bash
-   git clone https://github.com/AceNexus/AceLineBot.git
-   cd line_message_webhook
+   git clone https://github.com/AceNexus/LineBot.git
+   cd linebot
    ```
 
 2. **設定環境變數**
@@ -99,8 +99,8 @@ linemessagewebhook/
 1. **Clone 儲存庫**
 
    ```bash
-   git clone git@github.com:AceNexus/AceLineBot.git
-   cd AceLineBot
+   git clone git@github.com:AceNexus/LineBot.git
+   cd linebot
    ```
 
 2. **設定環境變數**
@@ -114,20 +114,20 @@ linemessagewebhook/
 3. **建立 Docker 映像檔**
 
    ```bash
-   docker build -t acelinebot .
+   docker build -t linebot .
    ```
 
 4. **運行容器**
    在運行容器之前，請確保 `.env` 文件中的 `PORT` 變數與以下命令中的端口一致。
 
    ```bash
-   docker run -d -p 5000:5000 --name acelinebot acelinebot
+   docker run -d -p 5000:5000 --name linebot linebot
    ```
 
 5. **確認狀態**
 
    ```bash
-   docker logs -f --tail 1000 acelinebot
+   docker logs -f --tail 1000 linebot
    ```
 
    > 使用此命令可以查看容器的運行日誌，幫助排查問題。
@@ -135,10 +135,10 @@ linemessagewebhook/
 6. **容器已存在，重新建構並運行容器**
 
    ```bash
-   docker rm -f acelinebot 2>/dev/null &&
-   docker build -t acelinebot . &&
-   docker run --env-file .env -d -p 5000:5000 --name acelinebot acelinebot
-   docker logs -f --tail 1000 acelinebot
+   docker rm -f linebot 2>/dev/null &&
+   docker build -t linebot . &&
+   docker run --env-file .env -d -p 5000:5000 --name linebot linebot
+   docker logs -f --tail 1000 linebot
    ```
 
 ## API 端點
