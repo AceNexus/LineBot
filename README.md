@@ -15,6 +15,7 @@
 - **日誌記錄**：詳細的日誌記錄，便於除錯和監控。
 - **Docker 支援**：容器化部署，確保跨環境的一致執行。
 - **環境設定**：透過環境變數提供彈性配置。
+- **Spring Cloud Config 整合**：從 Spring Cloud Config Server 讀取設定，支援動態配置更新。
 
 ## 專案架構
 
@@ -38,7 +39,7 @@ linebot/
 │   │   ├── news.py                      # 取得新聞相關工具
 │   │   └── __init__.py
 │   ├── __init__.py
-│   ├── config.py                        # 設定檔（例如環境變數存取）
+│   ├── config.py                        # 設定檔（例如環境變數存取與 Spring Cloud Config 整合）
 │   ├── extensions.py                    # 擴充模組初始化（DB、快取等）
 │   └── logger.py                        # 日誌設定
 ├── migrations/                          # 資料庫遷移檔案
@@ -60,6 +61,7 @@ linebot/
 - Python 3.11+
 - Docker（容器化部署可選）
 - LINE 開發者帳號和已設定的 Messaging API 頻道
+- Spring Cloud Config Server（可選，用於動態配置）
 
 ### 標準部署
 
@@ -92,7 +94,7 @@ linebot/
    python main.py
    ```
 
-   此時服務將在 `http://localhost:{PORT}` 可用，根據 `.env` 文件中設定的 `PORT` 變數（例如 5000）來訪問。
+   > 此時服務將在 `http://localhost:{PORT}` 可用，根據 `.env` 文件中設定的 `PORT` 變數（例如 5000）來訪問。
 
 ### Docker 部署
 
@@ -157,6 +159,20 @@ linebot/
 | `LINE_CHANNEL_SECRET`       | LINE 頻道密鑰   | _必填_   |
 | `PORT`                      | 服務監聽的埠號     | `5000` |
 | `LOG_LEVEL`                 | 日誌記錄詳細程度    | `INFO` |
+
+## Spring Cloud Config 整合
+
+本專案支援從 Spring Cloud Config Server 讀取設定。設定檔位於 `app/config.py`，使用 `load_config_from_spring_config` 方法從
+Config Server 拉取設定。
+
+### 使用方式
+
+1. 確保 Spring Cloud Config Server 已啟動並可訪問（例如：`http://localhost:8888`）。
+2. 在 `app/config.py` 中，設定 `app_name` 和 `profile` 參數，例如：
+   ```python
+   spring_config = load_config_from_spring_config("my-python-app", "dev", "http://localhost:8888")
+   ```
+3. 啟動應用程式後，設定將自動從 Config Server 載入。
 
 ## 常見問題
 
