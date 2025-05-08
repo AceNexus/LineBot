@@ -40,7 +40,7 @@ def webhook():
 
 def init_app(app):
     app.register_blueprint(main_blueprint)
-    app.logger.info("main_blueprint registered and app initialized")
+    logger.info("main_blueprint registered and app initialized")
 
     app.register_blueprint(api_v1_blueprint, url_prefix='/v1')
-    app.logger.info("api_v1_blueprint registered and app initialized")
+    logger.info("api_v1_blueprint registered and app initialized")
