@@ -15,7 +15,7 @@ def home():
     return 'LINE 訊息 Webhook 服務運行中！'
 
 
-@main_blueprint.route('/health', methods=['GET'])
+@main_blueprint.route('/actuator/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "healthy"}), 200
 

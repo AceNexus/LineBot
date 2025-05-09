@@ -69,7 +69,7 @@ linebot/
 
    ```bash
    git clone https://github.com/AceNexus/LineBot.git
-   cd linebot
+   cd LineBot
    ```
 
 2. **設定環境變數**
@@ -102,7 +102,7 @@ linebot/
 
    ```bash
    git clone git@github.com:AceNexus/LineBot.git
-   cd linebot
+   cd LineBot
    ```
 
 2. **設定環境變數**

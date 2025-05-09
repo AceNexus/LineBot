@@ -6,3 +6,4 @@ requests==2.31.0
 beautifulsoup4
 groq
 certifi
+py-eureka-client
