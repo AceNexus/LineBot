@@ -2,12 +2,19 @@ import logging
 
 from groq import Groq
 
-from app import Config
-
 logger = logging.getLogger(__name__)
 
-# 初始化 Groq client
-client = Groq(api_key=Config.GROQ_API_KEY)
+# 全域變量 groq_client
+groq_client = None
+
+
+# 初始化 Groq client，返回已初始化的 groq_client
+def get_groq_client(GROQ_API_KEY) -> Groq:
+    global groq_client
+    if groq_client is None:
+        groq_client = Groq(api_key=GROQ_API_KEY)
+    return groq_client
+
 
 # 儲存每位使用者對話歷史的字典
 user_sessions = {}
@@ -76,7 +83,7 @@ def chat_with_groq(user_id: str, message: str, model: str = "llama-3.3-70b-versa
             logger.info(f"Attempting to use model: {current_model}")
 
             # 呼叫 Groq API
-            response = client.chat.completions.create(
+            response = groq_client.chat.completions.create(
                 messages=user_sessions[user_id],
                 model=current_model,
                 temperature=0.7,  # 適當的創意度

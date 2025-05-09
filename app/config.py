@@ -1,6 +1,7 @@
 import logging
 import os
 
+import requests
 from dotenv import load_dotenv
 
 # 載入 .env
@@ -44,9 +45,8 @@ def load_app_config(app, profile):
                 exit_with_error("Empty or invalid configuration returned from Spring Config Server")
 
             app.config.update(spring_config)
+            print(f"Successfully loaded config from Spring Config Server for profile: {profile}")
             config = spring_config
-
-            logger.info(f"Successfully loaded config from Spring Config Server for profile: {profile}")
         except Exception as ex:
             exit_with_error(f"Failed to load config from Spring Config Server ({profile}): {ex}")
 
@@ -54,8 +54,6 @@ def load_app_config(app, profile):
 
 
 def load_config_from_spring_config(app_name, profile, config_server_url, username=None, password=None):
-    import requests
-
     if not config_server_url:
         raise ValueError("Spring Config Server URL not provided")
 
@@ -65,20 +63,30 @@ def load_config_from_spring_config(app_name, profile, config_server_url, usernam
     try:
         response = requests.get(url, auth=auth, timeout=10)
         response.raise_for_status()
-
         config_data = response.json()
-        if not config_data or "propertySources" not in config_data:
+
+        if "propertySources" not in config_data:
             raise ValueError("Invalid configuration format received from server")
 
-        config = {}
-        for source in config_data.get("propertySources", []):
-            config.update(source.get("source", {}))
+        raw_config = {}
+        for source in config_data["propertySources"]:
+            raw_config.update(source.get("source", {}))
 
-        for key in list(config.keys()):
-            if isinstance(config[key], str) and config[key].lower() in ('true', 'false'):
-                config[key] = config[key].lower() == 'true'
-            elif isinstance(config[key], str) and config[key].isdigit():
-                config[key] = int(config[key])
+        def normalize_key(key):
+            return key.upper().replace(".", "_")
+
+        config = {}
+        for k, v in raw_config.items():
+            norm_key = normalize_key(k)
+            if isinstance(v, str):
+                if v.lower() in ('true', 'false'):
+                    config[norm_key] = v.lower() == 'true'
+                elif v.isdigit():
+                    config[norm_key] = int(v)
+                else:
+                    config[norm_key] = v
+            else:
+                config[norm_key] = v
 
         return config
 
@@ -93,9 +101,9 @@ def exit_with_error(message):
     exit(1)
 
 
-def print_config_info():
-    print("--- Start Config values ---")
-    for key, value in vars(Config).items():
-        if not key.startswith("__"):
+def print_config_info(app):
+    print("--- Start Effective Config values ---")
+    for key, value in app.config.items():
+        if not key.startswith("_"):
             print(f"  {key}: {value}")
-    print("--- End Config values ---")
+    print("--- End Effective Config values ---")

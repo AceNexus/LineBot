@@ -9,6 +9,7 @@ from app.config import load_app_config
 from app.config import print_config_info
 from app.extensions import init_line_bot_api
 from app.logger import setup_logger
+from app.services.groq_service import get_groq_client
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ def create_app():
     # 加載配置
     profile = os.getenv("SPRING_PROFILES_ACTIVE", "local").lower()
     config = load_app_config(app, profile)
-    print_config_info()
+    print_config_info(app)
 
     # 設定日誌
     log_level = config.get("LOG_LEVEL", "INFO").upper()
@@ -42,6 +43,12 @@ def create_app():
 
     # 初始化API
     init_app(app)
+
+    # 初始化 Groq
+    get_groq_client(config.get("GROQ_API_KEY"))
+
+    # 處理器
+    from app.handlers.line_message_handlers import process_text_message
 
     return app
 
