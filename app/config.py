@@ -91,8 +91,10 @@ def load_config_from_spring_config(app_name, profile, config_server_url, usernam
         return config
 
     except requests.exceptions.RequestException as e:
+        logger.error(f"Network error connecting to Config Server: {e}")
         raise Exception(f"Network error connecting to Config Server: {e}")
     except ValueError as e:
+        logger.error(f"Configuration error: {e}")
         raise Exception(f"Configuration error: {e}")
 
 
@@ -101,9 +103,10 @@ def exit_with_error(message):
     exit(1)
 
 
-def print_config_info(app):
-    print("--- Start Effective Config values ---")
-    for key, value in app.config.items():
-        if not key.startswith("_"):
-            print(f"  {key}: {value}")
-    print("--- End Effective Config values ---")
+def print_config_info(app=None):
+    print("--- Start Config class values ---")
+    for attr in dir(Config):
+        if not attr.startswith("_") and attr.isupper():
+            value = getattr(Config, attr)
+            print(f"  {attr}: {value}")
+    print("--- End Config class values ---")

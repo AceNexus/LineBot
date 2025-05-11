@@ -94,7 +94,7 @@ linebot/
    python main.py
    ```
 
-   > 此時服務將在 `http://localhost:{PORT}` 可用，根據 `.env` 文件中設定的 `PORT` 變數（例如 5000）來訪問。
+   此時服務將在 `http://localhost:{PORT}` 可用，根據 `.env` 文件中設定的 `PORT` 變數（例如 5000）來訪問。
 
 ### Docker 部署
 
@@ -143,6 +143,49 @@ linebot/
    docker logs -f --tail 1000 linebot
    ```
 
+## 環境配置與 Spring Profiles
+
+本專案支援透過 Spring Profiles 來管理不同環境的配置。可以使用 `SPRING_PROFILES_ACTIVE` 環境變數來指定當前環境。
+
+### 可用的 Spring Profiles
+
+| Profile | 說明                                                 |
+|---------|----------------------------------------------------|
+| `local` | 本地開發環境，優先使用本地 `.env` 檔案中的設定                        |
+| `dev`   | 開發環境，將從 Spring Cloud Config Server 讀取 `dev` 環境的設定  |
+| `prod`  | 生產環境，將從 Spring Cloud Config Server 讀取 `prod` 環境的設定 |
+
+### 設定 Spring Profile
+
+1. **在 `.env` 文件中設定**
+
+   ```bash
+   # 使用本地環境
+   SPRING_PROFILES_ACTIVE=local
+   
+   # 或使用開發環境的 Config Server 設定
+   # SPRING_PROFILES_ACTIVE=dev
+   
+   # 或使用生產環境的 Config Server 設定
+   # SPRING_PROFILES_ACTIVE=prod
+   ```
+
+2. **或在運行容器時設定**
+
+   ```bash
+   docker run -e SPRING_PROFILES_ACTIVE=dev -d -p 5000:5000 --name linebot linebot
+   ```
+
+### 設定優先順序
+
+當啟動應用程式時，系統會按照以下優先順序載入設定：
+
+1. 命令列參數（最高優先級）
+2. 環境變數
+3. Spring Cloud Config Server 的設定（若啟用）
+4. `.env` 檔案中的設定
+5. 程式碼中的預設值（最低優先級）
+
 ## API 端點
 
 | 端點         | 方法   | 說明                          |
@@ -153,12 +196,14 @@ linebot/
 
 ## 配置參數
 
-| 環境變數                        | 說明          | 預設值    |
-|-----------------------------|-------------|--------|
-| `LINE_CHANNEL_ACCESS_TOKEN` | LINE 頻道存取令牌 | _必填_   |
-| `LINE_CHANNEL_SECRET`       | LINE 頻道密鑰   | _必填_   |
-| `PORT`                      | 服務監聽的埠號     | `5000` |
-| `LOG_LEVEL`                 | 日誌記錄詳細程度    | `INFO` |
+| 環境變數                        | 說明                            | 預設值                     |
+|-----------------------------|-------------------------------|-------------------------|
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE 頻道存取令牌                   | _必填_                    |
+| `LINE_CHANNEL_SECRET`       | LINE 頻道密鑰                     | _必填_                    |
+| `PORT`                      | 服務監聽的埠號                       | `5000`                  |
+| `LOG_LEVEL`                 | 日誌記錄詳細程度                      | `INFO`                  |
+| `SPRING_PROFILES_ACTIVE`    | Spring Profile 環境設定           | `local`                 |
+| `CONFIG_SERVER_URL`         | Spring Cloud Config Server 網址 | `http://localhost:8888` |
 
 ## Spring Cloud Config 整合
 
@@ -167,18 +212,64 @@ Config Server 拉取設定。
 
 ### 使用方式
 
-1. 確保 Spring Cloud Config Server 已啟動並可訪問（例如：`http://localhost:8888`）。
-2. 在 `app/config.py` 中，設定 `app_name` 和 `profile` 參數，例如：
+1. 確保 Spring Cloud Config Server 已啟動並可訪問。
+2. 設定 `SPRING_PROFILES_ACTIVE` 為 `dev` 或 `prod` 以啟用 Config Server 整合。
+3. 在 `app/config.py` 中，設定 `app_name` 和 `profile` 參數，例如：
    ```python
-   spring_config = load_config_from_spring_config("my-python-app", "dev", "http://localhost:8888")
+   spring_config = load_config_from_spring_config("linebot", os.getenv("SPRING_PROFILES_ACTIVE", "local"), os.getenv("CONFIG_SERVER_URL", "http://localhost:8888"))
    ```
-3. 啟動應用程式後，設定將自動從 Config Server 載入。
+4. 啟動應用程式後，設定將自動從 Config Server 載入。
+
+### 配置信息輸出
+
+在 `app/config.py` 中，提供了 `print_config_info` 方法，用於輸出當前 Config 類別中的設定值。使用方式如下：
+
+```python
+from app.config import print_config_info
+
+# 輸出 Config 類別中的設定值
+print_config_info()
+```
+
+這將在控制台中顯示所有有效的設定值，幫助你確認設定是否正確載入。
+
+## 測試不同環境設定
+
+若要測試不同環境的設定，可以使用以下命令：
+
+1. **本地環境**
+
+   ```bash
+   SPRING_PROFILES_ACTIVE=local python main.py
+   ```
+
+2. **開發環境**
+
+   ```bash
+   SPRING_PROFILES_ACTIVE=dev python main.py
+   ```
+
+3. **生產環境**
+
+   ```bash
+   SPRING_PROFILES_ACTIVE=prod python main.py
+   ```
 
 ## 常見問題
 
 1. **啟動服務失敗？**
 
     - 請檢查是否已正確安裝所有依賴套件（如：Flask、line-bot-sdk、python-dotenv 等）。
+    - 確認 `.env` 文件中是否包含必要的環境變數。
 
 2. **收到 401 錯誤？**
     - 請確認環境變數 `LINE_CHANNEL_ACCESS_TOKEN` 和 `LINE_CHANNEL_SECRET` 是否設定正確，並且與 LINE Developers 後台設定一致。
+
+3. **無法連接到 Spring Cloud Config Server？**
+    - 確認 Config Server 已啟動並可訪問。
+    - 檢查 `CONFIG_SERVER_URL` 是否正確設定。
+    - 確認應用程式的 `app_name` 在 Config Server 中存在對應的配置。
+
+4. **如何確認當前使用的是哪個環境設定？**
+    - 使用 `print_config_info()` 函數輸出當前配置資訊。
+    - 檢查應用程式啟動日誌，正常情況下會顯示當前使用的 profile。
