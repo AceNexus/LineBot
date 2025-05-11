@@ -26,11 +26,13 @@ class Config:
 
 def load_app_config(app, profile):
     print("Loading config for profile:", profile)
-    if profile == "local":
-        app.config.from_object(Config)
-        logger.info("Running in local mode with local configuration")
-        config = {key: value for key, value in app.config.items() if not key.startswith('_')}
-    else:
+
+    # 先從 .env 配置載入
+    app.config.from_object(Config)
+    logger.info(f"Running in {profile} mode with .env configuration")
+
+    # 如果是非 local 模式，則從 Spring Config Server 加載配置
+    if profile != "local":
         spring_config_url = os.getenv("SPRING_CONFIG_URL")
         spring_config_username = os.getenv("SPRING_CONFIG_USERNAME")
         spring_config_password = os.getenv("SPRING_CONFIG_PASSWORD")
@@ -44,11 +46,17 @@ def load_app_config(app, profile):
             if not spring_config:
                 exit_with_error("Empty or invalid configuration returned from Spring Config Server")
 
-            app.config.update(spring_config)
+            # 更新配置：只更新已定義的自定義配置項
+            for key in spring_config:
+                if key in Config.__dict__ and not key.startswith("_"):
+                    app.config[key] = spring_config[key]
+
             print(f"Successfully loaded config from Spring Config Server for profile: {profile}")
             config = spring_config
         except Exception as ex:
             exit_with_error(f"Failed to load config from Spring Config Server ({profile}): {ex}")
+    else:
+        config = {key: value for key, value in app.config.items() if not key.startswith('_')}
 
     return config
 
@@ -103,10 +111,13 @@ def exit_with_error(message):
     exit(1)
 
 
-def print_config_info(app=None):
-    print("--- Start Config class values ---")
-    for attr in dir(Config):
-        if not attr.startswith("_") and attr.isupper():
-            value = getattr(Config, attr)
-            print(f"  {attr}: {value}")
-    print("--- End Config class values ---")
+def print_config_info(app):
+    print("-" * 60)
+
+    custom_keys = [attr for attr in dir(Config) if not attr.startswith("_") and attr.isupper()]
+    for key in custom_keys:
+        value = app.config.get(key)
+        if value is not None:
+            print(f"{key:<30} : {value}")
+
+    print("-" * 60)
