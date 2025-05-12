@@ -80,8 +80,8 @@ def register_with_eureka(server_host, port, eureka_host, eureka_port, profile):
         eureka_client.init(
             eureka_server=f"http://{eureka_host}:{eureka_port}/eureka/",
             app_name="linebotservice",
-            instance_port=port,
-            instance_ip=server_host,
+            instance_port=int(port),
+            instance_host=server_host
         )
         logger.info(f"Successfully registered with Eureka server at {eureka_host}:{eureka_port}")
     except Exception as ex:
