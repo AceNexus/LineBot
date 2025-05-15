@@ -1,4 +1,6 @@
 import logging
+from enum import Enum
+from typing import Dict, Any, List, Union, Optional
 
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
 
@@ -7,13 +9,29 @@ from app.services import groq_service
 from app.utils.lumos import get_lumos
 from app.utils.menu import get_menu
 from app.utils.movie import get_movies
+from app.utils.news import TOPIC_NAMES
 from app.utils.news import get_news
 from app.utils.words import get_english_word, get_japanese_word
 
 logger = logging.getLogger(__name__)
 
-# 用戶狀態追蹤字典
-user_state = {}
+
+class UserState(Enum):
+    NORMAL = "normal"
+    AWAITING_NEWS_TOPIC = "awaiting_news_topic"
+    AWAITING_NEWS_COUNT = "awaiting_news_count"
+
+
+"""定義命令別名"""
+MENU_COMMANDS = ["0", "啊哇呾喀呾啦", "menu", "選單"]
+NEWS_COMMANDS = ["1"]
+MOVIE_COMMANDS = ["2"]
+JAPANESE_WORD_COMMANDS = ["3"]
+ENGLISH_WORD_COMMANDS = ["4"]
+LUMOS_COMMANDS = ["路摸思", "lumos"]
+
+"""用戶狀態追蹤字典"""
+user_states: Dict[str, Dict[str, Any]] = {}
 
 
 @handler.add(MessageEvent, message=TextMessage)
@@ -21,76 +39,122 @@ def process_text_message(event):
     try:
         message_text = event.message.text
         user_id = event.source.user_id
-
         logger.info(f"Received text message from {user_id}: {message_text}")
 
-        # 處理用戶輸入並獲取回應
-        response_text = process_user_input(user_id, message_text)
-        reply_to_user(event.reply_token, response_text)
+        response = process_user_input(user_id, message_text)
+        reply_to_user(event.reply_token, response)
+
     except Exception as e:
-        logger.error(f"Error processing text message: {e}")
-        # 嘗試發送錯誤訊息給用戶
-        try:
-            reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
-        except Exception:
-            logger.error("Failed to send error message to user")
+        logger.error(f"處理文字訊息時發生錯誤: {e}", exc_info=True)
+        reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
 
 
-def reply_to_user(reply_token, message):
-    # 處理字串類型，轉為 TextSendMessage
+def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMessage, FlexSendMessage, List]:
+    msg = message_text.strip().lower()
+    user_data = get_user_data(user_id)
+    current_state = user_data["state"]
+
+    if msg in MENU_COMMANDS:
+        clear_user_state(user_id)
+        return get_menu()
+
+    if current_state == UserState.AWAITING_NEWS_TOPIC:
+        return handle_news_topic_input(user_id, msg)
+
+    if current_state == UserState.AWAITING_NEWS_COUNT:
+        return handle_news_count_input(user_id, msg)
+
+    if current_state == UserState.NORMAL:
+        command_response = handle_command(user_id, msg)
+        if command_response is not None:
+            return command_response
+
+    clear_user_state(user_id)
+    return groq_service.chat_with_groq(user_id, message_text)
+
+
+def get_user_data(user_id: str) -> Dict[str, Any]:
+    if user_id not in user_states:
+        user_states[user_id] = {
+            "state": UserState.NORMAL,
+            "context": {}
+        }
+    return user_states[user_id]
+
+
+def set_user_state(user_id: str, state: UserState, context: Dict[str, Any] = None):
+    user_data = get_user_data(user_id)
+    user_data["state"] = state
+    if context:
+        user_data["context"].update(context)
+
+
+def clear_user_state(user_id: str):
+    user_states.pop(user_id, None)
+
+
+def reply_to_user(reply_token: str, message: Union[str, TextSendMessage, FlexSendMessage, List]):
     if isinstance(message, str):
         message = TextSendMessage(text=message)
 
-    # 檢查是否為有效的訊息類型
-    if not (isinstance(message, list) or isinstance(message, (TextSendMessage, FlexSendMessage))):
+    valid_types = (TextSendMessage, FlexSendMessage)
+    if not (isinstance(message, list) or isinstance(message, valid_types)):
         raise TypeError("不支援的訊息類型，請使用字串、TextSendMessage、FlexSendMessage 或這些物件的列表")
 
-    # 發送訊息
     line_bot_api.reply_message(reply_token, message)
 
 
-# 檢查用戶輸入並回應
-def process_user_input(user_id, message_text):
-    msg = message_text.strip().lower()
-
-    # 處理主選單命令
-    if msg in ["0", "啊哇呾喀呾啦", "menu", "選單"]:
-        # 清除任何可能的狀態
-        user_state.pop(user_id, None)
-        return get_menu()
-
-    # 檢查用戶是否處於等待新聞數量的狀態
-    if user_state.get(user_id) == "awaiting_news_count":
-        if msg.isdigit():
-            count = int(msg)
-            if 1 <= count <= 10:  # 限制為 1-10 篇，與提示一致
-                user_state.pop(user_id, None)  # 清除狀態
-                return get_news(count)
-            else:
-                return "請輸入有效的數字（1～10）"
+def handle_news_topic_input(user_id: str, msg: str) -> str:
+    if msg.isdigit():
+        topic_id = int(msg)
+        if 1 <= topic_id <= len(TOPIC_NAMES):
+            set_user_state(user_id, UserState.AWAITING_NEWS_COUNT, {"topic_id": topic_id})
+            return "請輸入想查看的新聞數量（1～10）："
         else:
-            # 如果用戶在等待數字時輸入了非數字內容
-            if msg in ["路摸思", "lumos"]:
-                # 清除狀態，處理新命令
-                user_state.pop(user_id, None)
-                # 繼續執行下面的命令處理邏輯
-            else:
-                return "請輸入數字 1～10 來選擇新聞數量，或輸入 0 返回主選單"
-
-    # 處理主選單選項
-    if msg == "1":
-        user_state[user_id] = "awaiting_news_count"
-        return "請輸入想查看的新聞數量（1～10）："
-    elif msg == "2":
-        return get_movies()
-    elif msg == "3":
-        return get_japanese_word()
-    elif msg == "4":
-        return get_english_word(user_id)
-    elif msg in ["路摸思", "lumos"]:  # 哈利波特咒語的參考，顯示隱藏功能
-        return get_lumos()
+            return f"請輸入有效的主題編號（1～{len(TOPIC_NAMES)}）"
     else:
-        # 清除狀態避免誤判
-        user_state.pop(user_id, None)
-        # 沒有符合條件的輸入，調用語言模型處理
-        return groq_service.chat_with_groq(user_id, message_text)
+        return "請輸入主題編號（數字）或輸入 0 返回主選單"
+
+
+def handle_news_count_input(user_id: str, msg: str) -> str:
+    if msg.isdigit():
+        count = int(msg)
+        if 1 <= count <= 10:
+            user_data = get_user_data(user_id)
+            topic_id = user_data.get("context", {}).get("topic_id")
+            if topic_id is None:
+                return "無法取得新聞主題，請重新操作。"
+
+            clear_user_state(user_id)
+            return get_news(topic_id, count)
+        else:
+            return "請輸入有效的數字（1～10）"
+    else:
+        return "請輸入新聞數量（數字 1～10），或輸入 0 返回主選單"
+
+
+def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessage, FlexSendMessage, List]]:
+    if msg in NEWS_COMMANDS:
+        set_user_state(user_id, UserState.AWAITING_NEWS_TOPIC)
+        return generate_news_topic_options()
+
+    elif msg in MOVIE_COMMANDS:
+        return get_movies()
+
+    elif msg in JAPANESE_WORD_COMMANDS:
+        return get_japanese_word()
+
+    elif msg in ENGLISH_WORD_COMMANDS:
+        return get_english_word(user_id)
+
+    elif msg in LUMOS_COMMANDS:
+        return get_lumos()
+
+    return None
+
+
+def generate_news_topic_options() -> str:
+    result = ["請輸入想查看的新聞主題編號："]
+    for key, name in TOPIC_NAMES.items():
+        result.append(f"{key}. {name}")
+    return "\n".join(result)

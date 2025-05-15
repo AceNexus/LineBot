@@ -12,16 +12,46 @@ from linebot.models import (
 )
 
 logger = logging.getLogger(__name__)
-URL = 'https://news.google.com/topics/CAAqKggKIiRDQkFTRlFvSUwyMHZNRFZxYUdjU0JYcG9MVlJYR2dKVVZ5Z0FQAQ?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant'
+
+# 主題列表
+TOPICS = {
+    '1': 'https://news.google.com/topics/CAAqJQgKIh9DQkFTRVFvSUwyMHZNRFptTXpJU0JYcG9MVlJYS0FBUAE?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant',
+    '2': 'https://news.google.com/topics/CAAqKggKIiRDQkFTRlFvSUwyMHZNRGx1YlY4U0JYcG9MVlJYR2dKVVZ5Z0FQAQ?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant',
+    '3': 'https://news.google.com/topics/CAAqHAgKIhZDQklTQ2pvSWJHOWpZV3hmZGpJb0FBUAE/sections/CAQiW0NCSVNQam9JYkc5allXeGZkakpDRUd4dlkyRnNYM1l5WDNObFkzUnBiMjV5RHhJTkwyY3ZNVEZqYkdoeE1ESTRjbm9QQ2cwdlp5OHhNV05zYUhFd01qaHlLQUEqNggAKjIICiIsQ0JJU0d6b0liRzlqWVd4ZmRqSjZEd29OTDJjdk1URmpiR2h4TURJNGNpZ0FQAVAB?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant',
+    '4': 'https://news.google.com/topics/CAAqKggKIiRDQkFTRlFvSUwyMHZNRGx6TVdZU0JYcG9MVlJYR2dKVVZ5Z0FQAQ?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant',
+    '5': 'https://news.google.com/topics/CAAqLAgKIiZDQkFTRmdvSkwyMHZNR1ptZHpWbUVnVjZhQzFVVnhvQ1ZGY29BQVAB?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant',
+    '6': 'https://news.google.com/topics/CAAqKggKIiRDQkFTRlFvSUwyMHZNREpxYW5RU0JYcG9MVlJYR2dKVVZ5Z0FQAQ?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant',
+    '7': 'https://news.google.com/topics/CAAqKggKIiRDQkFTRlFvSUwyMHZNRFp1ZEdvU0JYcG9MVlJYR2dKVVZ5Z0FQAQ?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant',
+    '8': 'https://news.google.com/topics/CAAqJQgKIh9DQkFTRVFvSUwyMHZNR3QwTlRFU0JYcG9MVlJYS0FBUAE?hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant'
+}
+
+# 主題名稱
+TOPIC_NAMES = {
+    '1': '台灣',
+    '2': '國際',
+    '3': '當地',
+    '4': '商業',
+    '5': '科學與科技',
+    '6': '娛樂',
+    '7': '體育',
+    '8': '健康'
+}
 
 
-def get_news(count):
-    return fetch_google_news_flex(count)
+def get_news(topic_id, count):
+    topic_id = str(topic_id).strip()
+    topic_url = TOPICS.get(topic_id)
+    topic_name = TOPIC_NAMES.get(topic_id, '新聞')
+
+    if not topic_url:
+        return TextSendMessage(text=f"找不到主題代碼：{topic_id}")
+
+    return fetch_google_news_flex(topic_name, topic_url, count)
 
 
-def fetch_google_news_flex(count):
+def fetch_google_news_flex(topic_name, topic_url, count):
     try:
-        response = requests.get(URL, timeout=10)
+        response = requests.get(topic_url, timeout=10)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -42,7 +72,7 @@ def fetch_google_news_flex(count):
                 short_url = shorten_url(full_url)
 
                 # 為每條新聞創建一個 bubble
-                header_text = TextComponent(text="焦點新聞", weight="bold", color="#1f76e3", size="sm")
+                header_text = TextComponent(text=topic_name, weight="bold", color="#1f76e3", size="sm")
                 header_box = BoxComponent(layout="vertical", contents=[header_text], padding_bottom="md")
 
                 body_text = TextComponent(text=title, weight="bold", wrap=True, size="md")
