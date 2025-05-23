@@ -44,7 +44,7 @@ def load_app_config(app, profile):
                 username=spring_config_username, password=spring_config_password
             )
             if not spring_config:
-                exit_with_error("Empty or invalid configuration returned from Spring Config Server")
+                logger.warning("Empty configuration returned from Spring Config Server, using defaults or .env values")
 
             # 更新配置：只更新已定義的自定義配置項
             for key in spring_config:
