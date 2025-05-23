@@ -123,7 +123,7 @@ linebot/
    在運行容器之前，請確保 `.env` 文件中的 `PORT` 變數與以下命令中的端口一致。
 
    ```bash
-   docker run -d -p 5000:5000 --name linebot linebot
+   docker run --env-file .env -d -p 5000:5000 --name linebot linebot
    ```
 
 5. **確認狀態**

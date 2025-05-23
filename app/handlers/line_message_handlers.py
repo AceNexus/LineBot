@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 class UserState(Enum):
     NORMAL = "normal"
-    AWAITING_NEWS_TOPIC = "awaiting_news_topic"
-    AWAITING_NEWS_COUNT = "awaiting_news_count"
+    AWAITING_NEWS_TOPIC_COUNT = "awaiting_news_topic_count"
 
 
 """定義命令別名"""
@@ -58,11 +57,8 @@ def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMe
         clear_user_state(user_id)
         return get_menu()
 
-    if current_state == UserState.AWAITING_NEWS_TOPIC:
-        return handle_news_topic_input(user_id, msg)
-
-    if current_state == UserState.AWAITING_NEWS_COUNT:
-        return handle_news_count_input(user_id, msg)
+    if current_state == UserState.AWAITING_NEWS_TOPIC_COUNT:
+        return handle_news_topic_count_input(user_id, msg)
 
     if current_state == UserState.NORMAL:
         command_response = handle_command(user_id, msg)
@@ -104,38 +100,40 @@ def reply_to_user(reply_token: str, message: Union[str, TextSendMessage, FlexSen
     line_bot_api.reply_message(reply_token, message)
 
 
-def handle_news_topic_input(user_id: str, msg: str) -> str:
-    if msg.isdigit():
-        topic_id = int(msg)
-        if 1 <= topic_id <= len(TOPIC_NAMES):
-            set_user_state(user_id, UserState.AWAITING_NEWS_COUNT, {"topic_id": topic_id})
-            return "請輸入想查看的新聞數量（1～10）："
-        else:
-            return f"請輸入有效的主題編號（1～{len(TOPIC_NAMES)}）"
-    else:
-        return "請輸入主題編號（數字）或輸入 0 返回主選單"
+def parse_news_format(msg: str) -> Optional[tuple]:
+    """
+    解析新聞格式：主題數字/數量數字
+    例如：1/5 表示主題 1，數量 5
+    """
+    if '/' in msg:
+        parts = msg.split('/')
+        if len(parts) == 2:
+            try:
+                topic_id = int(parts[0].strip())
+                count = int(parts[1].strip())
+                return topic_id, count
+            except ValueError:
+                return None
+    return None
 
 
-def handle_news_count_input(user_id: str, msg: str) -> str:
-    if msg.isdigit():
-        count = int(msg)
-        if 1 <= count <= 10:
-            user_data = get_user_data(user_id)
-            topic_id = user_data.get("context", {}).get("topic_id")
-            if topic_id is None:
-                return "無法取得新聞主題，請重新操作。"
-
+def handle_news_topic_count_input(user_id: str, msg: str) -> str:
+    # 只支援組合格式
+    parsed_result = parse_news_format(msg)
+    if parsed_result:
+        topic_id, count = parsed_result
+        if 1 <= topic_id <= len(TOPIC_NAMES) and 1 <= count <= 10:
             clear_user_state(user_id)
             return get_news(topic_id, count)
         else:
-            return "請輸入有效的數字（1～10）"
+            return generate_news_topic_options()
     else:
-        return "請輸入新聞數量（數字 1～10），或輸入 0 返回主選單"
+        return generate_news_topic_options()
 
 
 def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessage, FlexSendMessage, List]]:
     if msg in NEWS_COMMANDS:
-        set_user_state(user_id, UserState.AWAITING_NEWS_TOPIC)
+        set_user_state(user_id, UserState.AWAITING_NEWS_TOPIC_COUNT)
         return generate_news_topic_options()
 
     elif msg in MOVIE_COMMANDS:
@@ -154,7 +152,9 @@ def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessag
 
 
 def generate_news_topic_options() -> str:
-    result = ["請輸入想查看的新聞主題編號："]
+    result = ["📰 新聞查詢 - 格式：主題/數量", "範例：1/5 表示台灣新聞5則", ""]
     for key, name in TOPIC_NAMES.items():
         result.append(f"{key}. {name}")
+    result.append("")
+    result.append("💡 數量可選1-10則")
     return "\n".join(result)
