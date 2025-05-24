@@ -9,8 +9,7 @@ from app.services import groq_service
 from app.utils.lumos import get_lumos
 from app.utils.menu import get_menu
 from app.utils.movie import get_movies
-from app.utils.news import TOPIC_NAMES
-from app.utils.news import get_news
+from app.utils.news import generate_news_topic_options, handle_news_input
 from app.utils.words import get_english_word, get_japanese_word
 
 logger = logging.getLogger(__name__)
@@ -100,35 +99,15 @@ def reply_to_user(reply_token: str, message: Union[str, TextSendMessage, FlexSen
     line_bot_api.reply_message(reply_token, message)
 
 
-def parse_news_format(msg: str) -> Optional[tuple]:
-    """
-    解析新聞格式：主題數字/數量數字
-    例如：1/5 表示主題 1，數量 5
-    """
-    if '/' in msg:
-        parts = msg.split('/')
-        if len(parts) == 2:
-            try:
-                topic_id = int(parts[0].strip())
-                count = int(parts[1].strip())
-                return topic_id, count
-            except ValueError:
-                return None
-    return None
+def handle_news_topic_count_input(user_id: str, msg: str) -> Union[str, FlexSendMessage]:
+    """處理新聞主題數量輸入"""
+    result, success = handle_news_input(msg)
 
+    # 只有成功時才清除狀態，失敗時保持 AWAITING_NEWS_TOPIC_COUNT 狀態，讓用戶重新輸入
+    if success:
+        clear_user_state(user_id)
 
-def handle_news_topic_count_input(user_id: str, msg: str) -> str:
-    # 只支援組合格式
-    parsed_result = parse_news_format(msg)
-    if parsed_result:
-        topic_id, count = parsed_result
-        if 1 <= topic_id <= len(TOPIC_NAMES) and 1 <= count <= 10:
-            clear_user_state(user_id)
-            return get_news(topic_id, count)
-        else:
-            return generate_news_topic_options()
-    else:
-        return generate_news_topic_options()
+    return result
 
 
 def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessage, FlexSendMessage, List]]:
@@ -149,12 +128,3 @@ def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessag
         return get_lumos()
 
     return None
-
-
-def generate_news_topic_options() -> str:
-    result = ["📰 新聞查詢 - 格式：主題/數量", "範例：1/5 表示台灣新聞5則", ""]
-    for key, name in TOPIC_NAMES.items():
-        result.append(f"{key}. {name}")
-    result.append("")
-    result.append("💡 數量可選1-10則")
-    return "\n".join(result)
