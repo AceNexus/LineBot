@@ -1,18 +1,25 @@
 import logging
 import re
+import time
 
 from bs4 import BeautifulSoup
 from linebot.models import (
     FlexSendMessage, BubbleContainer, BoxComponent, TextComponent,
     ButtonComponent, URIAction, CarouselContainer, ImageComponent
 )
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 logger = logging.getLogger(__name__)
 MAX_MOVIES = 10
 LINE_TODAY_URL = "https://today.line.me/tw/v2/movie/chart/trending"
+MAX_RETRIES = 3
+
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'zh-TW,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive'
 }
 
 
@@ -58,10 +65,16 @@ def create_movie_bubble(movie):
         if rating_box:
             contents.append(BoxComponent(layout="horizontal", contents=rating_box, margin="sm"))
 
-        for key, icon in [('片長', '⏱️'), ('類型', '🎬'), ('上映時間', '📅')]:
-            if movie.get(key):
+        movie_info = [
+            (movie.get('片長'), '⏱️'),
+            (movie.get('類型'), '🎬'),
+            (movie.get('上映時間'), '📅')
+        ]
+
+        for info, icon in movie_info:
+            if info:
                 contents.append(
-                    TextComponent(text=f"{icon} {movie[key]}", size="sm", color="#666666", wrap=True, margin="xs"))
+                    TextComponent(text=f"{icon} {info}", size="sm", color="#666666", wrap=True, margin="xs"))
 
         footer = None
         if movie.get('預告片連結'):
@@ -85,161 +98,173 @@ def create_movie_bubble(movie):
 
 
 def get_line_today_top_movies():
-    """用 Playwright 爬取 LINE TODAY 熱門電影榜單，確保動態載入的背景圖片完全載入"""
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
+    """用 Playwright 爬取 LINE TODAY 熱門電影榜單，加入重試機制"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
 
-            # 設定 User-Agent 和其他標頭
-            page.set_extra_http_headers({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'zh-TW,zh;q=0.8,en-US;q=0.5,en;q=0.3',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Connection': 'keep-alive'
-            })
-
-            # 設定視窗大小
+        try:
+            # 設定標頭和視窗
+            page.set_extra_http_headers(HEADERS)
             page.set_viewport_size({"width": 1920, "height": 1080})
 
             page.goto(LINE_TODAY_URL, timeout=20000)
 
             # 等待電影列表載入
-            page.wait_for_selector('li.detailList-item', timeout=15000)
+            try:
+                page.wait_for_selector('li.detailList-item', timeout=15000)
+            except PlaywrightTimeoutError:
+                logger.warning("等待電影列表載入超時")
+                return []
 
-            # 多次滾動載入策略
-            for i in range(3):
-                # 慢慢滾動到底部
-                page.evaluate("window.scrollTo(0, document.body.scrollHeight/3)")
-                page.wait_for_timeout(1000)
-                page.evaluate("window.scrollTo(0, document.body.scrollHeight/2)")
-                page.wait_for_timeout(1000)
-                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                page.wait_for_timeout(2000)
-
-                # 滾回頂部
-                page.evaluate("window.scrollTo(0, 0)")
-                page.wait_for_timeout(1000)
-
-            # 強制觸發圖片載入 - 使用 JavaScript 直接操作
-            page.evaluate("""
-                // 強制觸發所有圖片載入
-                const figures = document.querySelectorAll('figure.detailListItem-posterImage');
-                figures.forEach(figure => {
-                    // 觸發重繪
-                    figure.style.display = 'none';
-                    figure.offsetHeight; // 強制重排
-                    figure.style.display = '';
-
-                    // 如果有 data-src 屬性，複製到 style
-                    const dataSrc = figure.getAttribute('data-bg') || figure.getAttribute('data-background');
-                    if (dataSrc && !figure.style.backgroundImage) {
-                        figure.style.backgroundImage = `url(${dataSrc})`;
-                    }
-                });
-            """)
-
-            # 再等待一下
-            page.wait_for_timeout(3000)
-
-            # 檢查是否有圖片載入
-            image_count = page.evaluate("""
-                document.querySelectorAll('figure.detailListItem-posterImage[style*="background-image"]').length
-            """)
-            logger.info(f"頁面中找到 {image_count} 個有背景圖片的元素")
+            # 滾動載入策略
+            scroll_and_load_images(page)
 
             html = page.content()
+            return parse_movies_from_html(html)
+
+        finally:
             browser.close()
 
-        soup = BeautifulSoup(html, 'html.parser')
 
-        movies = []
-        for item in soup.find_all('li', class_='detailList-item'):
-            movie = {}
+def scroll_and_load_images(page):
+    """滾動頁面並載入圖片"""
+    # 改進的滾動策略：更平順的滾動
+    scroll_positions = [0, 0.3, 0.6, 1, 0]  # 最後回到頂部
 
-            # 圖片
-            figure = item.find('figure', class_='detailListItem-posterImage')
-            if figure:
-                img_found = False
+    for pos in scroll_positions:
+        page.evaluate(f"window.scrollTo(0, document.body.scrollHeight * {pos})")
+        page.wait_for_timeout(1000)
 
-                # 從 style 屬性擷取背景圖片
-                if figure.has_attr('style') and not img_found:
-                    style = figure['style']
-                    # 更強健的正則表達式
-                    patterns = [
-                        r"background-image:\s*url\(['\"]?(.*?)['\"]?\)",
-                        r"background:\s*url\(['\"]?(.*?)['\"]?\)",
-                        r"url\(['\"]?(.*?)['\"]?\)",
-                    ]
-                    for pattern in patterns:
-                        match = re.search(pattern, style, re.IGNORECASE)
-                        if match:
-                            img_url = match.group(1)
-                            # 清理URL
-                            img_url = img_url.strip('\'"').strip()
-                            if img_url and not img_url.startswith('data:'):
-                                movie['圖片'] = img_url
-                                img_found = True
-                                break
+    # 強制觸發圖片載入
+    page.evaluate("""
+        const figures = document.querySelectorAll('figure.detailListItem-posterImage');
+        figures.forEach(figure => {
+            // 觸發重繪
+            const originalDisplay = figure.style.display;
+            figure.style.display = 'none';
+            figure.offsetHeight; // 強制重排
+            figure.style.display = originalDisplay || '';
 
-            # 中文片名
-            title = item.find('h2', class_='detailListItem-title')
-            if title:
-                movie['中文片名'] = title.get_text(strip=True)
+            // 處理各種 data 屬性
+            const dataAttrs = ['data-bg', 'data-background', 'data-src'];
+            dataAttrs.forEach(attr => {
+                const dataSrc = figure.getAttribute(attr);
+                if (dataSrc && !figure.style.backgroundImage) {
+                    figure.style.backgroundImage = `url(${dataSrc})`;
+                }
+            });
+        });
+    """)
 
-            # 英文片名
-            eng_title = item.find('h3', class_='detailListItem-engTitle')
-            if eng_title:
-                movie['英文片名'] = eng_title.get_text(strip=True)
+    page.wait_for_timeout(3000)
 
-            # 評分
-            rating = item.find('span', class_='iconInfo-text')
-            if rating:
-                movie['評分'] = rating.get_text(strip=True)
+    # 檢查載入結果
+    image_count = page.evaluate(
+        'document.querySelectorAll(\'figure.detailListItem-posterImage[style*="background-image"]\').length'
+    )
+    logger.info(f"頁面中找到 {image_count} 個有背景圖片的元素")
 
-            # 分級
-            cert = item.find('div', class_='detailListItem-certificate')
-            if cert:
-                badge = cert.find('span', class_='glnBadge-text')
-                if badge:
-                    movie['分級'] = badge.get_text(strip=True)
 
-            # 狀態資訊（片長/上映時間）
-            status = item.find('div', class_='detailListItem-status')
-            if status:
-                text = status.get_text(strip=True)
-                # 片長
-                match = re.search(r'(\d+小時\d+分)', text)
-                if match:
-                    movie['片長'] = match.group(1)
-                # 上映時間
-                match = re.search(r'上映(\d+週|\d+天)', text)
-                if match:
-                    movie['上映時間'] = f"上映{match.group(1)}"
+def parse_movies_from_html(html):
+    """從 HTML 解析電影資料"""
+    soup = BeautifulSoup(html, 'html.parser')
+    movies = []
 
-            # 類型
-            category = item.find('div', class_='detailListItem-category')
-            if category:
-                text = category.get_text(strip=True)
-                if '級' in text:
-                    types = text.split('級')[-1]
-                    type_list = [t for t in re.split(r'[•\s]+', types) if t]
-                    if type_list:
-                        movie['類型'] = ' • '.join(type_list)
+    for item in soup.find_all('li', class_='detailList-item'):
+        movie = extract_movie_info(item)
+        if movie.get('中文片名'):  # 只有有片名的才加入
+            movies.append(movie)
 
-            # 預告片連結
-            trailer = item.find('a', class_='detailListItem-trailer')
-            if trailer and trailer.has_attr('href'):
-                movie['預告片連結'] = f"https://today.line.me{trailer['href']}"
+    logger.info(f"共抓到 {len(movies)} 部電影，其中 {sum(1 for m in movies if '圖片' in m)} 部有圖片")
+    return movies
 
-            # 只有有片名的才加入結果
-            if movie.get('中文片名'):
-                movies.append(movie)
 
-        logger.info(f"共抓到 {len(movies)} 部電影，其中 {sum(1 for m in movies if '圖片' in m)} 部有圖片")
-        return movies
+def extract_movie_info(item):
+    """從單一項目中提取電影資訊"""
+    movie = {}
 
-    except Exception as e:
-        logger.error(f"動態載入電影資料失敗: {e}")
-        return []
+    # 圖片
+    movie['圖片'] = extract_image_url(item)
+
+    # 基本資訊
+    movie['中文片名'] = extract_text_content(item, 'h2', 'detailListItem-title')
+    movie['英文片名'] = extract_text_content(item, 'h3', 'detailListItem-engTitle')
+    movie['評分'] = extract_text_content(item, 'span', 'iconInfo-text')
+
+    # 分級
+    cert_div = item.find('div', class_='detailListItem-certificate')
+    if cert_div:
+        badge = cert_div.find('span', class_='glnBadge-text')
+        if badge:
+            movie['分級'] = badge.get_text(strip=True)
+
+    # 狀態資訊（片長/上映時間）
+    extract_status_info(item, movie)
+
+    # 類型
+    extract_category_info(item, movie)
+
+    # 預告片連結
+    trailer = item.find('a', class_='detailListItem-trailer')
+    if trailer and trailer.has_attr('href'):
+        movie['預告片連結'] = f"https://today.line.me{trailer['href']}"
+
+    return movie
+
+
+def extract_image_url(item):
+    """提取圖片 URL"""
+    figure = item.find('figure', class_='detailListItem-posterImage')
+    if not figure or not figure.has_attr('style'):
+        return ""
+
+    style = figure['style']
+    patterns = [
+        r"background-image:\s*url\(['\"]?(.*?)['\"]?\)",
+        r"background:\s*url\(['\"]?(.*?)['\"]?\)",
+        r"url\(['\"]?(.*?)['\"]?\)",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, style, re.IGNORECASE)
+        if match:
+            img_url = match.group(1).strip('\'"').strip()
+            if img_url and not img_url.startswith('data:'):
+                return img_url
+    return ""
+
+
+def extract_text_content(item, tag, class_name):
+    """提取文字內容的通用方法"""
+    element = item.find(tag, class_=class_name)
+    return element.get_text(strip=True) if element else ""
+
+
+def extract_status_info(item, movie):
+    """提取狀態資訊（片長和上映時間）"""
+    status = item.find('div', class_='detailListItem-status')
+    if status:
+        text = status.get_text(strip=True)
+
+        # 片長
+        duration_match = re.search(r'(\d+小時\d+分)', text)
+        if duration_match:
+            movie['片長'] = duration_match.group(1)
+
+        # 上映時間
+        release_match = re.search(r'上映(\d+週|\d+天)', text)
+        if release_match:
+            movie['上映時間'] = f"上映{release_match.group(1)}"
+
+
+def extract_category_info(item, movie):
+    """提取類型資訊"""
+    category = item.find('div', class_='detailListItem-category')
+    if category:
+        text = category.get_text(strip=True)
+        if '級' in text:
+            types = text.split('級')[-1]
+            type_list = [t for t in re.split(r'[•\s]+', types) if t]
+            if type_list:
+                movie['類型'] = ' • '.join(type_list)
