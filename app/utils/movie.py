@@ -1,6 +1,5 @@
 import logging
 import re
-import time
 
 from bs4 import BeautifulSoup
 from linebot.models import (
