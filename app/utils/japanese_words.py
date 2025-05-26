@@ -43,7 +43,8 @@ def get_japanese_word(user_id: str):
     }
     """
 
-    response = chat_with_groq(user_id, prompt)
+    # 使用 'japanese' 會話類型，與一般聊天和英文學習分離
+    response = chat_with_groq(user_id, prompt, session_type="japanese")
 
     try:
         if isinstance(response, str):

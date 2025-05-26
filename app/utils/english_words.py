@@ -41,7 +41,8 @@ def get_english_word(user_id: str):
     }
     """
 
-    response = chat_with_groq(user_id, prompt)
+    # 使用 'english' 會話類型，與一般聊天和日文學習分離
+    response = chat_with_groq(user_id, prompt, session_type="english")
 
     try:
         if isinstance(response, str):
