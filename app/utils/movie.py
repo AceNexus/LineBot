@@ -9,9 +9,8 @@ from linebot.models import (
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 logger = logging.getLogger(__name__)
-MAX_MOVIES = 10
+MAX_MOVIES = 12
 LINE_TODAY_URL = "https://today.line.me/tw/v2/movie/chart/trending"
-MAX_RETRIES = 3
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -97,72 +96,41 @@ def create_movie_bubble(movie):
 
 
 def get_line_today_top_movies():
-    """用 Playwright 爬取 LINE TODAY 熱門電影榜單，加入重試機制"""
+    """LINE TODAY 電影爬蟲"""
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
 
         try:
-            # 設定標頭和視窗
             page.set_extra_http_headers(HEADERS)
-            page.set_viewport_size({"width": 1920, "height": 1080})
-
             page.goto(LINE_TODAY_URL, timeout=20000)
 
-            # 等待電影列表載入
-            try:
-                page.wait_for_selector('li.detailList-item', timeout=15000)
-            except PlaywrightTimeoutError:
-                logger.warning("等待電影列表載入超時")
-                return []
+            # 等待並滾動載入
+            page.wait_for_selector('li.detailList-item', timeout=15000)
+            load_content(page)
 
-            # 滾動載入策略
-            scroll_and_load_images(page)
-
-            html = page.content()
-            return parse_movies_from_html(html)
-
+            return parse_movies_from_html(page.content())
+        except PlaywrightTimeoutError:
+            logger.warning("載入超時")
+            return []
         finally:
             browser.close()
 
 
-def scroll_and_load_images(page):
-    """滾動頁面並載入圖片"""
-    # 改進的滾動策略：更平順的滾動
-    scroll_positions = [0, 0.3, 0.6, 1, 0]  # 最後回到頂部
+def load_content(page):
+    """一次性載入內容"""
+    # 滾動到底部
+    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+    page.wait_for_timeout(1000)
 
-    for pos in scroll_positions:
-        page.evaluate(f"window.scrollTo(0, document.body.scrollHeight * {pos})")
-        page.wait_for_timeout(1000)
-
-    # 強制觸發圖片載入
+    # 觸發懶載入圖片
     page.evaluate("""
-        const figures = document.querySelectorAll('figure.detailListItem-posterImage');
-        figures.forEach(figure => {
-            // 觸發重繪
-            const originalDisplay = figure.style.display;
-            figure.style.display = 'none';
-            figure.offsetHeight; // 強制重排
-            figure.style.display = originalDisplay || '';
-
-            // 處理各種 data 屬性
-            const dataAttrs = ['data-bg', 'data-background', 'data-src'];
-            dataAttrs.forEach(attr => {
-                const dataSrc = figure.getAttribute(attr);
-                if (dataSrc && !figure.style.backgroundImage) {
-                    figure.style.backgroundImage = `url(${dataSrc})`;
-                }
-            });
+        document.querySelectorAll('figure.detailListItem-posterImage').forEach(el => {
+            const src = el.getAttribute('data-bg') || el.getAttribute('data-src');
+            if (src) el.style.backgroundImage = `url(${src})`;
         });
     """)
-
-    page.wait_for_timeout(3000)
-
-    # 檢查載入結果
-    image_count = page.evaluate(
-        'document.querySelectorAll(\'figure.detailListItem-posterImage[style*="background-image"]\').length'
-    )
-    logger.info(f"頁面中找到 {image_count} 個有背景圖片的元素")
+    page.wait_for_timeout(2000)
 
 
 def parse_movies_from_html(html):
