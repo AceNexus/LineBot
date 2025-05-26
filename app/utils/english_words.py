@@ -1,10 +1,10 @@
 import json
 import logging
-from urllib.parse import quote
 
 from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, ButtonComponent, URIAction
 
 from app.services.groq_service import chat_with_groq
+from app.utils.google_tts import generate_audio_url
 
 logger = logging.getLogger(__name__)
 
@@ -76,17 +76,7 @@ def get_english_word(user_id: str):
 
     except Exception as e:
         logger.error(f"Failed to parse response as JSON: {str(e)}")
-
-        # 提供默認單字資訊作為備用
-        word_data = {
-            "word": "fallback",
-            "pronunciation": "/ˈfɔːlbæk/",
-            "part_of_speech": "noun",
-            "definition_en": "something or someone to turn to in case of failure or emergency",
-            "definition_zh": "備用方案、後備選擇",
-            "example_sentence": "We need a fallback plan in case this doesn't work.",
-            "example_translation": "我們需要一個備用計劃，以防這個不起作用。"
-        }
+        return "抱歉，獲取英文單字時發生錯誤，請通知維護人員，謝謝。"
 
     required_fields = ["word", "pronunciation", "part_of_speech", "definition_en",
                        "definition_zh", "example_sentence", "example_translation"]
@@ -211,16 +201,3 @@ def create_flex_bubble(word_data):
     )
 
     return bubble
-
-
-# 產生 Google TTS 音訊連結
-def generate_audio_url(text):
-    if not text:
-        return ""
-    encoded_text = quote(text)
-    return f"https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q={encoded_text}"
-
-
-def get_japanese_word():
-    from linebot.models import TextSendMessage
-    return TextSendMessage(text="我們正在努力開發此功能,敬請期待")

@@ -6,11 +6,12 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendM
 
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
+from app.utils.english_words import get_english_word
+from app.utils.japanese_words import get_japanese_word
 from app.utils.lumos import get_lumos
 from app.utils.menu import get_menu
 from app.utils.movie import get_movies
 from app.utils.news import generate_news_topic_options, handle_news_input
-from app.utils.words import get_english_word, get_japanese_word
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessag
         return get_movies()
 
     elif msg in JAPANESE_WORD_COMMANDS:
-        return get_japanese_word()
+        return get_japanese_word(user_id)
 
     elif msg in ENGLISH_WORD_COMMANDS:
         return get_english_word(user_id)
