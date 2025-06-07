@@ -6,7 +6,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendM
 
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
-from app.utils.english_words import get_english_word
+from app.utils.english_words import generate_english_word_count_options, handle_english_word_input
 from app.utils.japanese_words import get_japanese_word
 from app.utils.lumos import get_lumos
 from app.utils.menu import get_menu
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 class UserState(Enum):
     NORMAL = "normal"
     AWAITING_NEWS_TOPIC_COUNT = "awaiting_news_topic_count"
+    AWAITING_ENGLISH_WORD_COUNT = "awaiting_english_word_count"
 
 
 """定義命令別名"""
@@ -59,6 +60,9 @@ def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMe
 
     if current_state == UserState.AWAITING_NEWS_TOPIC_COUNT:
         return handle_news_topic_count_input(user_id, msg)
+
+    if current_state == UserState.AWAITING_ENGLISH_WORD_COUNT:
+        return handle_english_word_count_input(user_id, msg)
 
     if current_state == UserState.NORMAL:
         command_response = handle_command(user_id, msg)
@@ -111,6 +115,17 @@ def handle_news_topic_count_input(user_id: str, msg: str) -> Union[str, FlexSend
     return result
 
 
+def handle_english_word_count_input(user_id: str, msg: str) -> Union[str, FlexSendMessage, List]:
+    """處理英文單字數量輸入"""
+    result, success = handle_english_word_input(user_id, msg)
+
+    # 只有成功時才清除狀態，失敗時保持 AWAITING_ENGLISH_WORD_COUNT 狀態，讓用戶重新輸入
+    if success:
+        clear_user_state(user_id)
+
+    return result
+
+
 def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessage, FlexSendMessage, List]]:
     if msg in NEWS_COMMANDS:
         set_user_state(user_id, UserState.AWAITING_NEWS_TOPIC_COUNT)
@@ -123,7 +138,8 @@ def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessag
         return get_japanese_word(user_id)
 
     elif msg in ENGLISH_WORD_COMMANDS:
-        return get_english_word(user_id)
+        set_user_state(user_id, UserState.AWAITING_ENGLISH_WORD_COUNT)
+        return generate_english_word_count_options()
 
     elif msg in LUMOS_COMMANDS:
         return get_lumos()

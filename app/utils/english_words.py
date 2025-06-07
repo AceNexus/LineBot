@@ -1,21 +1,137 @@
 import json
 import logging
+from typing import Union, Tuple, Optional
 
-from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, ButtonComponent, URIAction
+from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, ButtonComponent, URIAction, \
+    CarouselContainer
 
 from app.services.groq_service import chat_with_groq
 from app.utils.google_tts import generate_audio_url
 
 logger = logging.getLogger(__name__)
 
+# 英文單字難度等級
+DIFFICULTY_LEVELS = {
+    '1': 'beginner',
+    '2': 'intermediate',
+    '3': 'advanced'
+}
 
-def get_english_word(user_id: str):
+# 難度名稱
+DIFFICULTY_NAMES = {
+    '1': '初級 (Basic)',
+    '2': '中級 (Intermediate)',
+    '3': '高級 (Advanced)'
+}
+
+
+def generate_english_word_count_options() -> str:
+    """生成英文單字選項文字"""
+    result = ["📚 英文單字學習", "格式：難度/數量", "範例：2/3 表示中級單字3個", ""]
+    for key, name in DIFFICULTY_NAMES.items():
+        result.append(f"{key}. {name}")
+    result.append("")
+    result.append("💡 數量可選1-10個")
+    return "\n".join(result)
+
+
+def parse_english_word_format(msg: str) -> Optional[tuple]:
     """
-    使用 Groq AI 提供英文單字學習內容
-    功能：獲取一個日常生活中常用的英文單字或表達方式，並提供完整的學習資訊
-    返回：包含單字、發音、詞性、英文解釋、中文意思、例句及翻譯的完整學習內容
+    解析英文單字格式：難度數字/數量數字
+    例如：2/3 表示難度 2（中級），數量 3
     """
-    prompt = """請提供一個英文單字的學習內容，包含以下欄位：
+    if '/' in msg:
+        parts = msg.split('/')
+        if len(parts) == 2:
+            try:
+                difficulty_id = int(parts[0].strip())
+                count = int(parts[1].strip())
+                return difficulty_id, count
+            except ValueError:
+                return None
+    return None
+
+
+def handle_english_word_input(user_id: str, msg: str) -> Tuple[Union[str, FlexSendMessage], bool]:
+    """
+    處理英文單字輸入，返回單字內容或提示訊息
+    返回: (結果, 是否成功處理)
+    """
+    parsed_result = parse_english_word_format(msg)
+    if parsed_result:
+        difficulty_id, count = parsed_result
+        if 1 <= difficulty_id <= len(DIFFICULTY_NAMES) and 1 <= count <= 10:
+            return get_english_words(user_id, difficulty_id, count), True  # 成功獲取單字
+        else:
+            return generate_english_word_count_options(), False  # 參數錯誤，需要重新輸入
+    else:
+        return generate_english_word_count_options(), False  # 格式錯誤，需要重新輸入
+
+
+def get_english_words(user_id: str, difficulty_id: int, count: int):
+    """獲取指定難度和數量的英文單字"""
+    difficulty_level = DIFFICULTY_LEVELS.get(str(difficulty_id))
+    difficulty_name = DIFFICULTY_NAMES.get(str(difficulty_id), '英文單字')
+
+    if not difficulty_level:
+        return f"找不到難度代碼：{difficulty_id}"
+
+    return fetch_english_words_flex(user_id, difficulty_name, difficulty_level, count)
+
+
+def fetch_english_words_flex(user_id: str, difficulty_name: str, difficulty_level: str, count: int):
+    """獲取英文單字並轉換為 Flex Message"""
+    try:
+        # 準備 bubbles 用於 carousel
+        bubbles = []
+
+        for i in range(count):
+            word_data = get_single_english_word(user_id, difficulty_level)
+
+            if isinstance(word_data, dict):
+                # 創建單字的 bubble
+                bubble = create_word_bubble(word_data, difficulty_name)
+                bubbles.append(bubble)
+            else:
+                logger.warning(f"Failed to generate word {i + 1}: {word_data}")
+
+        if not bubbles:
+            return "抱歉，無法生成英文單字，請稍後再試。"
+
+        # 如果只有一個單字，直接返回 FlexSendMessage
+        if len(bubbles) == 1:
+            return FlexSendMessage(
+                alt_text=f"英文單字學習 - {difficulty_name}",
+                contents=bubbles[0]
+            )
+
+        # 多個單字使用 carousel
+        carousel = CarouselContainer(contents=bubbles)
+
+        flex_message = FlexSendMessage(
+            alt_text=f"英文單字學習 - {difficulty_name} ({count}個)",
+            contents=carousel
+        )
+
+        return flex_message
+
+    except Exception as e:
+        logger.error(f"Failed to fetch English words: {e}")
+        return "無法取得英文單字內容"
+
+
+def get_single_english_word(user_id: str, difficulty_level: str) -> Union[dict, str]:
+    """
+    獲取單個英文單字
+    """
+    # 根據難度等級調整 prompt
+    difficulty_prompts = {
+        'beginner': "請選擇適合初學者的基礎英文單字，常見於日常對話中的簡單詞彙（如CEFR A1-A2級別）",
+        'intermediate': "請選擇難度符合台灣常見的「三千單」詞彙等級（如全民英檢中級、CEFR B1-B2級）的單字，應為日常生活中常見且實用的詞彙",
+        'advanced': "請選擇較具挑戰性的高級英文單字，適合進階學習者（如CEFR C1-C2級別），包含學術或專業領域常用詞彙"
+    }
+
+    prompt = f"""請提供一個英文單字的學習內容，包含以下欄位：
 
     1. 單字 (word)
     2. 發音（使用台灣常見的 KK 音標）(pronunciation)
@@ -25,12 +141,12 @@ def get_english_word(user_id: str):
     6. 例句 (example_sentence)
     7. 例句翻譯 (example_translation)
 
-    請選擇難度符合台灣常見的「三千單」詞彙等級（如全民英檢中級、CEFR B1 級）的單字，應為日常生活中常見且實用的詞彙，能夠提升口說與寫作能力，適用於一般對話或正式場合。
+    {difficulty_prompts.get(difficulty_level, difficulty_prompts['intermediate'])}
 
     請以 **純 JSON 格式** 回覆，**不要添加多餘說明或文字**，並請確認所有資訊準確無誤。
 
     以下為格式範例：
-    {
+    {{
       "word": "negotiate",
       "pronunciation": "/nɪˈɡoʊʃiˌeɪt/",
       "part_of_speech": "verb",
@@ -38,7 +154,7 @@ def get_english_word(user_id: str):
       "definition_zh": "協商、談判",
       "example_sentence": "We need to negotiate a better deal with the supplier.",
       "example_translation": "我們需要與供應商協商更好的條件。"
-    }
+    }}
     """
 
     # 使用 'english' 會話類型，與一般聊天和日文學習分離
@@ -87,16 +203,12 @@ def get_english_word(user_id: str):
             word_data[field] = ""
             logger.warning(f"Missing '{field}' field in word data. Set to empty string.")
 
-    flex_bubble = create_flex_bubble(word_data)
-    return FlexSendMessage(
-        alt_text=f"英文單字：{word_data['word']}",
-        contents=flex_bubble
-    )
+    return word_data
 
 
-def create_flex_bubble(word_data):
+def create_word_bubble(word_data: dict, difficulty_name: str):
     """
-    使用 LINE SDK 的原生物件建立 Flex 訊息
+    創建單字的 bubble
     """
     # 生成單字發音連結
     try:
@@ -112,14 +224,11 @@ def create_flex_bubble(word_data):
         logger.error(f"Error occurred while generating example sentence pronunciation URL: {str(e)}")
         example_audio_url = ""
 
-    # 使用 LINE SDK 內建的物件
-    header_box = BoxComponent(
-        layout="vertical",
-        contents=[
-            TextComponent(text="📖英文單字", weight="bold", size="lg")
-        ]
-    )
+    # Header
+    header_text = TextComponent(text=f"📖 {difficulty_name}", weight="bold", color="#1f76e3", size="sm")
+    header_box = BoxComponent(layout="vertical", contents=[header_text], padding_bottom="md")
 
+    # Body
     body_contents = [
         TextComponent(
             text=f"📚 {word_data['word']} ({word_data['part_of_speech']})",
@@ -168,9 +277,11 @@ def create_flex_bubble(word_data):
     body_box = BoxComponent(
         layout="vertical",
         spacing="md",
-        contents=body_contents
+        contents=body_contents,
+        padding_all="md"
     )
 
+    # Footer
     footer_box = BoxComponent(
         layout="vertical",
         spacing="sm",
@@ -191,14 +302,16 @@ def create_flex_bubble(word_data):
                 style="secondary",
                 color="#1E90FF"
             )
-        ]
+        ],
+        padding_top="sm"
     )
 
     # 建立 BubbleContainer
     bubble = BubbleContainer(
         header=header_box,
         body=body_box,
-        footer=footer_box
+        footer=footer_box,
+        size="kilo"
     )
 
     return bubble
