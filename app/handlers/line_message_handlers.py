@@ -1,8 +1,12 @@
 import logging
 from enum import Enum
 from typing import Dict, Any, List, Union, Optional
+from urllib.parse import parse_qs
 
-from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
+from linebot.models import (
+    MessageEvent, TextMessage, TextSendMessage, FlexSendMessage,
+    PostbackEvent
+)
 
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
@@ -32,6 +36,35 @@ LUMOS_COMMANDS = ["路摸思", "lumos"]
 
 """用戶狀態追蹤字典"""
 user_states: Dict[str, Dict[str, Any]] = {}
+
+
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    try:
+        user_id = event.source.user_id
+        data = parse_qs(event.postback.data)
+        action = data.get('action', [''])[0]
+
+        logger.info(f"Received postback from {user_id}: {action}")
+
+        if action == 'news':
+            set_user_state(user_id, UserState.AWAITING_NEWS_TOPIC_COUNT)
+            response = generate_news_topic_options()
+        elif action == 'movie':
+            response = get_movies()
+        elif action == 'japanese':
+            response = get_japanese_word(user_id)
+        elif action == 'english':
+            set_user_state(user_id, UserState.AWAITING_ENGLISH_WORD_COUNT)
+            response = generate_english_word_count_options()
+        else:
+            response = "無效的操作"
+
+        reply_to_user(event.reply_token, response)
+
+    except Exception as e:
+        logger.error(f"處理 postback 事件時發生錯誤: {e}", exc_info=True)
+        reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
 
 
 @handler.add(MessageEvent, message=TextMessage)

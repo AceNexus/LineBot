@@ -2,8 +2,8 @@ import logging
 
 from linebot.models import (
     FlexSendMessage, BubbleContainer, BoxComponent,
-    TextComponent, ButtonComponent, MessageAction, SeparatorComponent,
-    BubbleStyle, BlockStyle
+    TextComponent, ButtonComponent, PostbackAction,
+    BubbleStyle, BlockStyle, SeparatorComponent
 )
 
 logger = logging.getLogger(__name__)
@@ -40,9 +40,12 @@ def get_menu():
         background_color="#404040"
     )
 
-    def create_button(emoji, label, text, color):
+    def create_button(emoji, label, action, color):
         return ButtonComponent(
-            action=MessageAction(label=f"{emoji} {label}", text=text),
+            action=PostbackAction(
+                label=f"{emoji} {label}",
+                data=f"action={action}"
+            ),
             style="primary",
             color=color,
             margin="sm",
@@ -50,10 +53,10 @@ def get_menu():
         )
 
     buttons = [
-        create_button("📰", "新聞快訊", "1", "#FF7777"),  # 紅色
-        create_button("🎬", "熱門電影", "2", "#66E6E6"),  # 青色
-        create_button("🇯🇵", "日文單字", "3", "#66B3FF"),  # 藍色
-        create_button("🇺🇸", "英文單字", "4", "#A6D6A6")   # 綠色
+        create_button("📰", "新聞快訊", "news", "#FF7777"),  # 紅色
+        create_button("🎬", "熱門電影", "movie", "#66E6E6"),  # 青色
+        create_button("🇯🇵", "日文單字", "japanese", "#66B3FF"),  # 藍色
+        create_button("🇺🇸", "英文單字", "english", "#A6D6A6")  # 綠色
     ]
 
     footer_box = BoxComponent(
