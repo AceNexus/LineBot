@@ -1,4 +1,5 @@
 import logging
+import time
 from enum import Enum
 from typing import Dict, Any, List, Union, Optional
 from urllib.parse import parse_qs
@@ -34,14 +35,41 @@ JAPANESE_WORD_COMMANDS = ["3"]
 ENGLISH_WORD_COMMANDS = ["4"]
 LUMOS_COMMANDS = ["路摸思", "lumos"]
 
+# 按鈕冷卻時間（秒）
+BUTTON_COOLDOWN = 2.0
+
 """用戶狀態追蹤字典"""
 user_states: Dict[str, Dict[str, Any]] = {}
+
+"""追蹤使用者最後操作時間"""
+user_last_action_time: Dict[str, float] = {}
+
+
+def check_button_cooldown(user_id: str) -> bool:
+    """
+    檢查使用者是否在冷卻時間內
+    返回 True 表示可以操作，False 表示需要等待
+    """
+    current_time = time.time()
+    last_action_time = user_last_action_time.get(user_id, 0)
+
+    if current_time - last_action_time < BUTTON_COOLDOWN:
+        return False
+
+    user_last_action_time[user_id] = current_time
+    return True
 
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
     try:
         user_id = event.source.user_id
+
+        # 檢查冷卻時間
+        if not check_button_cooldown(user_id):
+            reply_to_user(event.reply_token, "操作太快了，請稍等一下再試")
+            return
+
         data = parse_qs(event.postback.data)
         action = data.get('action', [''])[0]
 
