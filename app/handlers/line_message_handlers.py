@@ -16,14 +16,13 @@ from app.utils.japanese_words import get_japanese_word
 from app.utils.lumos import get_lumos
 from app.utils.menu import get_menu
 from app.utils.movie import get_movies
-from app.utils.news import generate_news_topic_options, handle_news_input
+from app.utils.news import get_news_topic_menu, get_news_count_menu, get_news
 
 logger = logging.getLogger(__name__)
 
 
 class UserState(Enum):
     NORMAL = "normal"
-    AWAITING_NEWS_TOPIC_COUNT = "awaiting_news_topic_count"
     AWAITING_ENGLISH_WORD_COUNT = "awaiting_english_word_count"
 
 
@@ -72,12 +71,18 @@ def handle_postback(event):
 
         data = parse_qs(event.postback.data)
         action = data.get('action', [''])[0]
+        news_topic = data.get('news_topic', [''])[0]
+        news_count = data.get('news_count', [''])[0]
 
         logger.info(f"Received postback from {user_id}: {action}")
 
         if action == 'news':
-            set_user_state(user_id, UserState.AWAITING_NEWS_TOPIC_COUNT)
-            response = generate_news_topic_options()
+            response = get_news_topic_menu()
+        elif news_topic:
+            response = get_news_count_menu(news_topic)
+        elif news_count:
+            topic_id, count = news_count.split('/')
+            response = get_news(topic_id, int(count))
         elif action == 'movie':
             response = get_movies()
         elif action == 'japanese':
@@ -119,9 +124,6 @@ def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMe
         clear_user_state(user_id)
         return get_menu()
 
-    if current_state == UserState.AWAITING_NEWS_TOPIC_COUNT:
-        return handle_news_topic_count_input(user_id, msg)
-
     if current_state == UserState.AWAITING_ENGLISH_WORD_COUNT:
         return handle_english_word_count_input(user_id, msg)
 
@@ -134,46 +136,19 @@ def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMe
     return groq_service.chat_with_groq(user_id, message_text)
 
 
-def get_user_data(user_id: str) -> Dict[str, Any]:
-    if user_id not in user_states:
-        user_states[user_id] = {
-            "state": UserState.NORMAL,
-            "context": {}
-        }
-    return user_states[user_id]
-
-
-def set_user_state(user_id: str, state: UserState, context: Dict[str, Any] = None):
-    user_data = get_user_data(user_id)
-    user_data["state"] = state
-    if context:
-        user_data["context"].update(context)
-
-
-def clear_user_state(user_id: str):
-    user_states.pop(user_id, None)
-
-
-def reply_to_user(reply_token: str, message: Union[str, TextSendMessage, FlexSendMessage, List]):
-    if isinstance(message, str):
-        message = TextSendMessage(text=message)
-
-    valid_types = (TextSendMessage, FlexSendMessage)
-    if not (isinstance(message, list) or isinstance(message, valid_types)):
-        raise TypeError("不支援的訊息類型，請使用字串、TextSendMessage、FlexSendMessage 或這些物件的列表")
-
-    line_bot_api.reply_message(reply_token, message)
-
-
-def handle_news_topic_count_input(user_id: str, msg: str) -> Union[str, FlexSendMessage]:
-    """處理新聞主題數量輸入"""
-    result, success = handle_news_input(msg)
-
-    # 只有成功時才清除狀態，失敗時保持 AWAITING_NEWS_TOPIC_COUNT 狀態，讓用戶重新輸入
-    if success:
-        clear_user_state(user_id)
-
-    return result
+def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessage, FlexSendMessage, List]]:
+    if msg in NEWS_COMMANDS:
+        return get_news_topic_menu()
+    elif msg in MOVIE_COMMANDS:
+        return get_movies()
+    elif msg in JAPANESE_WORD_COMMANDS:
+        return get_japanese_word(user_id)
+    elif msg in ENGLISH_WORD_COMMANDS:
+        set_user_state(user_id, UserState.AWAITING_ENGLISH_WORD_COUNT)
+        return generate_english_word_count_options()
+    elif msg in LUMOS_COMMANDS:
+        return get_lumos()
+    return None
 
 
 def handle_english_word_count_input(user_id: str, msg: str) -> Union[str, FlexSendMessage, List]:
@@ -187,22 +162,33 @@ def handle_english_word_count_input(user_id: str, msg: str) -> Union[str, FlexSe
     return result
 
 
-def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessage, FlexSendMessage, List]]:
-    if msg in NEWS_COMMANDS:
-        set_user_state(user_id, UserState.AWAITING_NEWS_TOPIC_COUNT)
-        return generate_news_topic_options()
+def get_user_data(user_id: str) -> Dict[str, Any]:
+    """獲取用戶數據，如果不存在則創建"""
+    if user_id not in user_states:
+        user_states[user_id] = {
+            "state": UserState.NORMAL,
+            "last_action_time": 0
+        }
+    return user_states[user_id]
 
-    elif msg in MOVIE_COMMANDS:
-        return get_movies()
 
-    elif msg in JAPANESE_WORD_COMMANDS:
-        return get_japanese_word(user_id)
+def set_user_state(user_id: str, state: UserState):
+    """設置用戶狀態"""
+    user_data = get_user_data(user_id)
+    user_data["state"] = state
 
-    elif msg in ENGLISH_WORD_COMMANDS:
-        set_user_state(user_id, UserState.AWAITING_ENGLISH_WORD_COUNT)
-        return generate_english_word_count_options()
 
-    elif msg in LUMOS_COMMANDS:
-        return get_lumos()
+def clear_user_state(user_id: str):
+    """清除用戶狀態"""
+    if user_id in user_states:
+        user_states[user_id]["state"] = UserState.NORMAL
 
-    return None
+
+def reply_to_user(reply_token: str, message: Union[str, TextSendMessage, FlexSendMessage, List]):
+    """回覆用戶訊息"""
+    if isinstance(message, list):
+        line_bot_api.reply_message(reply_token, message)
+    else:
+        if isinstance(message, str):
+            message = TextSendMessage(text=message)
+        line_bot_api.reply_message(reply_token, message)

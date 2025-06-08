@@ -9,7 +9,8 @@ from linebot.models import (
     FlexSendMessage, TextSendMessage,
     CarouselContainer, BubbleContainer,
     BoxComponent, TextComponent, ButtonComponent,
-    URIAction
+    URIAction, PostbackAction,
+    SeparatorComponent, BubbleStyle, BlockStyle
 )
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ TOPIC_NAMES = {
     '1': '台灣',
     '2': '國際',
     '3': '商業',
-    '4': '科學與科技',
+    '4': '科技',
     '5': '娛樂',
     '6': '體育',
     '7': '健康'
@@ -164,3 +165,139 @@ def shorten_url(long_url):
     except requests.RequestException as e:
         logger.error(f"URL shortening failed: {e}")
         return long_url
+
+
+def get_news_topic_menu():
+    """生成新聞主題選單"""
+    title = TextComponent(
+        text="📰 新聞主題",
+        weight="bold",
+        size="xl",
+        align="center",
+        color="#FFFFFF",
+        wrap=True
+    )
+
+    subtitle = TextComponent(
+        text="請選擇新聞主題",
+        size="sm",
+        color="#E0E0E0",
+        align="center",
+        wrap=True,
+        margin="sm"
+    )
+
+    body_box = BoxComponent(
+        layout="vertical",
+        contents=[
+            title,
+            subtitle,
+            SeparatorComponent(margin="lg", color="#666666")
+        ],
+        spacing="md",
+        padding_all="lg",
+        background_color="#404040"
+    )
+
+    buttons = []
+    for topic_id, topic_name in TOPIC_NAMES.items():
+        buttons.append(
+            ButtonComponent(
+                action=PostbackAction(
+                    label=f"📰 {topic_name}",
+                    data=f"news_topic={topic_id}"
+                ),
+                style="primary",
+                color="#FF7777",
+                margin="sm",
+                height="sm"
+            )
+        )
+
+    footer_box = BoxComponent(
+        layout="vertical",
+        contents=buttons,
+        spacing="sm",
+        padding_all="lg",
+        background_color="#404040"
+    )
+
+    bubble = BubbleContainer(
+        body=body_box,
+        footer=footer_box,
+        styles=BubbleStyle(
+            body=BlockStyle(background_color="#404040"),
+            footer=BlockStyle(background_color="#404040")
+        )
+    )
+
+    return FlexSendMessage(alt_text="新聞主題選單", contents=bubble)
+
+
+def get_news_count_menu(topic_id: str):
+    """生成新聞數量選單"""
+    topic_name = TOPIC_NAMES.get(topic_id, '新聞')
+
+    title = TextComponent(
+        text=f"📰 {topic_name}新聞",
+        weight="bold",
+        size="xl",
+        align="center",
+        color="#FFFFFF",
+        wrap=True
+    )
+
+    subtitle = TextComponent(
+        text="請選擇要顯示的新聞數量",
+        size="sm",
+        color="#E0E0E0",
+        align="center",
+        wrap=True,
+        margin="sm"
+    )
+
+    body_box = BoxComponent(
+        layout="vertical",
+        contents=[
+            title,
+            subtitle,
+            SeparatorComponent(margin="lg", color="#666666")
+        ],
+        spacing="md",
+        padding_all="lg",
+        background_color="#404040"
+    )
+
+    buttons = []
+    for count in range(1, 11):
+        buttons.append(
+            ButtonComponent(
+                action=PostbackAction(
+                    label=f"{count} 則",
+                    data=f"news_count={topic_id}/{count}"
+                ),
+                style="primary",
+                color="#FF7777",
+                margin="sm",
+                height="sm"
+            )
+        )
+
+    footer_box = BoxComponent(
+        layout="vertical",
+        contents=buttons,
+        spacing="sm",
+        padding_all="lg",
+        background_color="#404040"
+    )
+
+    bubble = BubbleContainer(
+        body=body_box,
+        footer=footer_box,
+        styles=BubbleStyle(
+            body=BlockStyle(background_color="#404040"),
+            footer=BlockStyle(background_color="#404040")
+        )
+    )
+
+    return FlexSendMessage(alt_text="新聞數量選單", contents=bubble)
