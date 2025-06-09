@@ -56,7 +56,8 @@ def get_menu():
         create_button("📰", "新聞快訊", "news", "#FF7777"),  # 紅色
         create_button("🎬", "熱門電影", "movie", "#66E6E6"),  # 青色
         create_button("🇯🇵", "日文單字", "japanese", "#66B3FF"),  # 藍色
-        create_button("🇺🇸", "英文單字", "english", "#A6D6A6")  # 綠色
+        create_button("🇺🇸", "英文單字", "english", "#A6D6A6"),  # 綠色
+        create_button("📅", "英文訂閱", "english_subscribe", "#FFB366")  # 橙色
     ]
 
     footer_box = BoxComponent(
