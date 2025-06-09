@@ -1,6 +1,5 @@
 import logging
-import time
-from typing import Dict, List, Union
+from typing import List, Union, Set
 from urllib.parse import parse_qs
 
 from linebot.models import (
@@ -27,88 +26,98 @@ logger = logging.getLogger(__name__)
 MENU_COMMANDS = ["0", "啊哇呾喀呾啦", "menu", "選單"]
 LUMOS_COMMANDS = ["路摸思", "lumos"]
 
-# 按鈕冷卻時間（秒）
-BUTTON_COOLDOWN = 1.5
-
-"""追蹤使用者最後操作時間"""
-user_last_action_time: Dict[str, float] = {}
-
-
-def check_button_cooldown(user_id: str) -> bool:
-    """
-    檢查使用者是否在冷卻時間內
-    返回 True 表示可以操作，False 表示需要等待
-    """
-    current_time = time.time()
-    last_action_time = user_last_action_time.get(user_id, 0)
-
-    if current_time - last_action_time < BUTTON_COOLDOWN:
-        return False
-
-    user_last_action_time[user_id] = current_time
-    return True
+"""追蹤正在處理的用戶請求"""
+processing_users: Set[str] = set()
 
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
+    user_id = None
     try:
         user_id = event.source.user_id
 
-        # 檢查冷卻時間
-        if not check_button_cooldown(user_id):
-            reply_to_user(event.reply_token, "操作太快了，請稍等一下再試")
+        # 檢查是否正在處理中
+        if user_id in processing_users:
+            reply_to_user(event.reply_token, "請求執行中，請稍候...")
             return
 
-        data = parse_qs(event.postback.data)
-        action = data.get('action', [''])[0]
-        news_topic = data.get('news_topic', [''])[0]
-        news_count = data.get('news_count', [''])[0]
-        english_difficulty = data.get('english_difficulty', [''])[0]
-        english_count = data.get('english_count', [''])[0]
+        # 標記用戶為處理中
+        processing_users.add(user_id)
 
-        logger.info(f"Received postback from {user_id}: {action}")
+        try:
+            data = parse_qs(event.postback.data)
+            action = data.get('action', [''])[0]
+            news_topic = data.get('news_topic', [''])[0]
+            news_count = data.get('news_count', [''])[0]
+            english_difficulty = data.get('english_difficulty', [''])[0]
+            english_count = data.get('english_count', [''])[0]
 
-        if action == 'news':
-            response = get_news_topic_menu()
-        elif news_topic:
-            response = get_news_count_menu(news_topic)
-        elif news_count:
-            topic_id, count = news_count.split('/')
-            response = get_news(topic_id, int(count))
-        elif action == 'movie':
-            response = get_movies()
-        elif action == 'japanese':
-            response = get_japanese_word(user_id)
-        elif action == 'english':
-            response = get_english_difficulty_menu()
-        elif action == 'english_subscribe':
-            response = get_subscription_menu()
-        elif english_difficulty:
-            response = get_english_count_menu(english_difficulty)
-        elif english_count:
-            difficulty_id, count = english_count.split('/')
-            response = get_english_words(user_id, int(difficulty_id), int(count))
-        else:
-            response = "這功能正在裝上輪子，還在趕來的路上"
+            logger.info(f"Received postback from {user_id}: {action}")
 
-        reply_to_user(event.reply_token, response)
+            if action == 'news':
+                response = get_news_topic_menu()
+            elif news_topic:
+                response = get_news_count_menu(news_topic)
+            elif news_count:
+                topic_id, count = news_count.split('/')
+                response = get_news(topic_id, int(count))
+            elif action == 'movie':
+                response = get_movies()
+            elif action == 'japanese':
+                response = get_japanese_word(user_id)
+            elif action == 'english':
+                response = get_english_difficulty_menu()
+            elif action == 'english_subscribe':
+                response = get_subscription_menu()
+            elif english_difficulty:
+                response = get_english_count_menu(english_difficulty)
+            elif english_count:
+                difficulty_id, count = english_count.split('/')
+                response = get_english_words(user_id, int(difficulty_id), int(count))
+            else:
+                response = "這功能正在裝上輪子，還在趕來的路上"
+
+            reply_to_user(event.reply_token, response)
+
+        finally:
+            # 無論成功或失敗都要移除處理標記
+            if user_id:
+                processing_users.discard(user_id)
 
     except Exception as e:
+        # 確保異常時也移除處理標記
+        if user_id:
+            processing_users.discard(user_id)
         logger.error(f"處理 postback 事件時發生錯誤: {e}", exc_info=True)
         reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def process_text_message(event):
+    user_id = None
     try:
         message_text = event.message.text
         user_id = event.source.user_id
         logger.info(f"Received text message from {user_id}: {message_text}")
 
-        response = process_user_input(user_id, message_text)
-        reply_to_user(event.reply_token, response)
+        # 檢查是否正在處理中
+        if user_id in processing_users:
+            reply_to_user(event.reply_token, "請求執行中，請稍候...")
+            return
+
+        # 標記用戶為處理中
+        processing_users.add(user_id)
+
+        try:
+            response = process_user_input(user_id, message_text)
+            reply_to_user(event.reply_token, response)
+        finally:
+            if user_id:
+                processing_users.discard(user_id)
 
     except Exception as e:
+        if user_id:
+            processing_users.discard(user_id)
         logger.error(f"處理文字訊息時發生錯誤: {e}", exc_info=True)
         reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
 
