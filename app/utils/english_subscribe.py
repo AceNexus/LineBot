@@ -1,13 +1,12 @@
 import logging
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from linebot.models import (
-    FlexSendMessage, BubbleContainer, BoxComponent,
-    TextComponent, ButtonComponent, PostbackAction,
-    BubbleStyle, BlockStyle, SeparatorComponent,
-    TextSendMessage
+    ButtonComponent, PostbackAction,
+    BubbleStyle, BlockStyle, TextSendMessage
 )
+from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, SeparatorComponent
 
 from app.utils.english_words import DIFFICULTY_NAMES
 
@@ -23,12 +22,12 @@ SUBSCRIPTION_TIMES = {
 }
 
 # 記憶體儲存訂閱資訊
-_subscriptions: Dict[str, Dict] = {}
+_subscriptions: Dict[str, List[Dict]] = {}  # user_id -> List[subscription]
 
 
 def save_subscription(user_id: str, difficulty_id: str, count: int, times: List[str]) -> None:
     """儲存訂閱設定"""
-    _subscriptions[user_id] = {
+    subscription = {
         'difficulty_id': difficulty_id,
         'difficulty_name': DIFFICULTY_NAMES.get(difficulty_id, '未知難度'),
         'count': count,
@@ -36,10 +35,15 @@ def save_subscription(user_id: str, difficulty_id: str, count: int, times: List[
         'created_at': datetime.now().isoformat()
     }
 
+    if user_id not in _subscriptions:
+        _subscriptions[user_id] = []
 
-def get_subscription(user_id: str) -> Optional[Dict]:
+    _subscriptions[user_id].append(subscription)
+
+
+def get_subscription(user_id: str) -> List[Dict]:
     """獲取訂閱設定"""
-    return _subscriptions.get(user_id)
+    return _subscriptions.get(user_id, [])
 
 
 def cancel_subscription(user_id: str) -> bool:
@@ -53,18 +57,7 @@ def cancel_subscription(user_id: str) -> bool:
 def handle_subscription_time(data: dict) -> tuple:
     """處理訂閱時段選擇"""
     difficulty_id, count, time_id = data['english_subscribe_time'][0].split('/')
-    # 從現有訂閱中獲取已選擇的時段
-    user_id = data.get('user_id', [''])[0]
-    current_subscription = get_subscription(user_id)
-    selected_times = current_subscription.get('times', []) if current_subscription else []
-
-    # 如果時段已存在則移除，否則添加
-    if time_id in selected_times:
-        selected_times.remove(time_id)
-    else:
-        selected_times.append(time_id)
-
-    return difficulty_id, int(count), selected_times
+    return difficulty_id, int(count), [time_id]
 
 
 def handle_subscription_save(data: Dict, user_id: str) -> TextSendMessage:
@@ -79,17 +72,55 @@ def handle_subscription_save(data: Dict, user_id: str) -> TextSendMessage:
     return TextSendMessage(text="訂閱設定已儲存！")
 
 
-def handle_subscription_view(user_id: str) -> TextSendMessage:
+def handle_subscription_view(user_id: str) -> FlexSendMessage:
     """處理訂閱查詢"""
-    subscription = get_subscription(user_id)
-    if subscription:
-        return TextSendMessage(
-            text=f"您的訂閱設定：\n"
-                 f"難度：{subscription['difficulty_name']}\n"
-                 f"數量：{subscription['count']} 個單字\n"
-                 f"時段：{', '.join(subscription['times'])}"
+    subscriptions = get_subscription(user_id)
+
+    if not subscriptions:
+        return FlexSendMessage(
+            alt_text="訂閱查詢",
+            contents=BubbleContainer(
+                body=BoxComponent(
+                    layout="vertical",
+                    contents=[
+                        TextComponent(text="❗您目前沒有訂閱！", weight="bold", size="md", color="#FF3B30")
+                    ]
+                )
+            )
         )
-    return TextSendMessage(text="您目前沒有訂閱！")
+
+    contents = []
+    for i, sub in enumerate(subscriptions, 1):
+        # 將時段代碼轉為時間顯示
+        time_labels = [SUBSCRIPTION_TIMES.get(t, f"未知({t})") for t in sub['times']]
+        time_display = ', '.join(time_labels)
+
+        contents.extend([
+            TextComponent(text=f"📌 訂閱 {i}", weight="bold", size="md", color="#1DB446"),
+            TextComponent(text=f"難度：{sub['difficulty_name']}", size="sm", color="#555555"),
+            TextComponent(text=f"數量：{sub['count']} 個單字", size="sm", color="#555555"),
+            TextComponent(text=f"時間：{time_display}", size="sm", color="#555555"),
+        ])
+        if i < len(subscriptions):
+            contents.append(SeparatorComponent(margin="md"))
+
+    bubble = BubbleContainer(
+        body=BoxComponent(
+            layout="vertical",
+            contents=[
+                TextComponent(text="📚 您的訂閱設定", weight="bold", size="lg", color="#0000CC", margin="none"),
+                SeparatorComponent(margin="md"),
+                BoxComponent(
+                    layout="vertical",
+                    margin="md",
+                    spacing="sm",
+                    contents=contents
+                )
+            ]
+        )
+    )
+
+    return FlexSendMessage(alt_text="訂閱查詢", contents=bubble)
 
 
 def handle_subscription_cancel(user_id: str) -> TextSendMessage:
