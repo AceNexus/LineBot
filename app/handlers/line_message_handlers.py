@@ -11,7 +11,11 @@ from linebot.models import (
 
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
-from app.utils.english_words import generate_english_word_count_options, handle_english_word_input
+from app.utils.english_words import (
+    handle_english_word_input,
+    get_english_difficulty_menu, get_english_count_menu,
+    get_english_words
+)
 from app.utils.japanese_words import get_japanese_word
 from app.utils.lumos import get_lumos
 from app.utils.menu import get_menu
@@ -35,7 +39,7 @@ ENGLISH_WORD_COMMANDS = ["4"]
 LUMOS_COMMANDS = ["路摸思", "lumos"]
 
 # 按鈕冷卻時間（秒）
-BUTTON_COOLDOWN = 2.0
+BUTTON_COOLDOWN = 3.0
 
 """用戶狀態追蹤字典"""
 user_states: Dict[str, Dict[str, Any]] = {}
@@ -73,6 +77,8 @@ def handle_postback(event):
         action = data.get('action', [''])[0]
         news_topic = data.get('news_topic', [''])[0]
         news_count = data.get('news_count', [''])[0]
+        english_difficulty = data.get('english_difficulty', [''])[0]
+        english_count = data.get('english_count', [''])[0]
 
         logger.info(f"Received postback from {user_id}: {action}")
 
@@ -88,8 +94,12 @@ def handle_postback(event):
         elif action == 'japanese':
             response = get_japanese_word(user_id)
         elif action == 'english':
-            set_user_state(user_id, UserState.AWAITING_ENGLISH_WORD_COUNT)
-            response = generate_english_word_count_options()
+            response = get_english_difficulty_menu()
+        elif english_difficulty:
+            response = get_english_count_menu(english_difficulty)
+        elif english_count:
+            difficulty_id, count = english_count.split('/')
+            response = get_english_words(user_id, int(difficulty_id), int(count))
         else:
             response = "無效的操作"
 
@@ -144,8 +154,7 @@ def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessag
     elif msg in JAPANESE_WORD_COMMANDS:
         return get_japanese_word(user_id)
     elif msg in ENGLISH_WORD_COMMANDS:
-        set_user_state(user_id, UserState.AWAITING_ENGLISH_WORD_COUNT)
-        return generate_english_word_count_options()
+        return get_english_difficulty_menu()
     elif msg in LUMOS_COMMANDS:
         return get_lumos()
     return None

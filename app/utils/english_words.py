@@ -2,8 +2,10 @@ import json
 import logging
 from typing import Union, Tuple, Optional
 
-from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, ButtonComponent, URIAction, \
-    CarouselContainer
+from linebot.models import (
+    FlexSendMessage, BubbleContainer, BoxComponent, TextComponent,
+    ButtonComponent, URIAction, CarouselContainer, PostbackAction, SeparatorComponent, BubbleStyle, BlockStyle
+)
 
 from app.services.groq_service import chat_with_groq
 from app.utils.google_tts import generate_audio_url
@@ -315,3 +317,137 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
     )
 
     return bubble
+
+
+def get_english_difficulty_menu() -> FlexSendMessage:
+    """生成英文單字難度選單"""
+    title = TextComponent(
+        text="📚 英文單字學習",
+        weight="bold",
+        size="xl",
+        align="center",
+        color="#FFFFFF",
+        wrap=True
+    )
+
+    subtitle = TextComponent(
+        text="請選擇單字難度等級",
+        size="sm",
+        color="#E0E0E0",
+        align="center",
+        wrap=True,
+        margin="sm"
+    )
+
+    body_box = BoxComponent(
+        layout="vertical",
+        contents=[
+            title,
+            subtitle,
+            SeparatorComponent(margin="lg", color="#666666")
+        ],
+        spacing="md",
+        padding_all="lg",
+        background_color="#404040"
+    )
+
+    buttons = []
+    for key, name in DIFFICULTY_NAMES.items():
+        button = ButtonComponent(
+            action=PostbackAction(
+                label=f"📖 {name}",
+                data=f"english_difficulty={key}"
+            ),
+            style="primary",
+            color="#A6D6A6",
+            margin="sm",
+            height="sm"
+        )
+        buttons.append(button)
+
+    footer_box = BoxComponent(
+        layout="vertical",
+        contents=buttons,
+        spacing="sm",
+        padding_all="lg",
+        background_color="#404040"
+    )
+
+    bubble = BubbleContainer(
+        body=body_box,
+        footer=footer_box,
+        styles=BubbleStyle(
+            body=BlockStyle(background_color="#404040"),
+            footer=BlockStyle(background_color="#404040")
+        )
+    )
+
+    return FlexSendMessage(alt_text="英文單字難度選單", contents=bubble)
+
+
+def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
+    """生成英文單字數量選單"""
+    difficulty_name = DIFFICULTY_NAMES.get(difficulty_id, "英文單字")
+    
+    title = TextComponent(
+        text=f"📚 {difficulty_name}",
+        weight="bold",
+        size="xl",
+        align="center",
+        color="#FFFFFF",
+        wrap=True
+    )
+
+    subtitle = TextComponent(
+        text="請選擇要學習的單字數量",
+        size="sm",
+        color="#E0E0E0",
+        align="center",
+        wrap=True,
+        margin="sm"
+    )
+
+    body_box = BoxComponent(
+        layout="vertical",
+        contents=[
+            title,
+            subtitle,
+            SeparatorComponent(margin="lg", color="#666666")
+        ],
+        spacing="md",
+        padding_all="lg",
+        background_color="#404040"
+    )
+
+    buttons = []
+    for count in range(1, 6):
+        button = ButtonComponent(
+            action=PostbackAction(
+                label=f"📖 {count} 個單字",
+                data=f"english_count={difficulty_id}/{count}"
+            ),
+            style="primary",
+            color="#A6D6A6",
+            margin="sm",
+            height="sm"
+        )
+        buttons.append(button)
+
+    footer_box = BoxComponent(
+        layout="vertical",
+        contents=buttons,
+        spacing="sm",
+        padding_all="lg",
+        background_color="#404040"
+    )
+
+    bubble = BubbleContainer(
+        body=body_box,
+        footer=footer_box,
+        styles=BubbleStyle(
+            body=BlockStyle(background_color="#404040"),
+            footer=BlockStyle(background_color="#404040")
+        )
+    )
+
+    return FlexSendMessage(alt_text="英文單字數量選單", contents=bubble)
