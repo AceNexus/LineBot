@@ -12,7 +12,6 @@ from linebot.models import (
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
 from app.utils.english_words import (
-    handle_english_word_input,
     get_english_difficulty_menu, get_english_count_menu,
     get_english_words
 )
@@ -27,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 class UserState(Enum):
     NORMAL = "normal"
-    AWAITING_ENGLISH_WORD_COUNT = "awaiting_english_word_count"
 
 
 """定義命令別名"""
@@ -134,9 +132,6 @@ def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMe
         clear_user_state(user_id)
         return get_menu()
 
-    if current_state == UserState.AWAITING_ENGLISH_WORD_COUNT:
-        return handle_english_word_count_input(user_id, msg)
-
     if current_state == UserState.NORMAL:
         command_response = handle_command(user_id, msg)
         if command_response is not None:
@@ -158,17 +153,6 @@ def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessag
     elif msg in LUMOS_COMMANDS:
         return get_lumos()
     return None
-
-
-def handle_english_word_count_input(user_id: str, msg: str) -> Union[str, FlexSendMessage, List]:
-    """處理英文單字數量輸入"""
-    result, success = handle_english_word_input(user_id, msg)
-
-    # 只有成功時才清除狀態，失敗時保持 AWAITING_ENGLISH_WORD_COUNT 狀態，讓用戶重新輸入
-    if success:
-        clear_user_state(user_id)
-
-    return result
 
 
 def get_user_data(user_id: str) -> Dict[str, Any]:
