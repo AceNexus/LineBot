@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Union, Tuple, Optional
+from typing import Union
 
 from linebot.models import (
     FlexSendMessage, BubbleContainer, BoxComponent, TextComponent,
@@ -25,49 +25,6 @@ DIFFICULTY_NAMES = {
     '2': '中級 (Intermediate)',
     '3': '高級 (Advanced)'
 }
-
-
-def generate_english_word_count_options() -> str:
-    """生成英文單字選項文字"""
-    result = ["📚 英文單字學習", "格式：難度/數量", "範例：2/3 表示中級單字3個", ""]
-    for key, name in DIFFICULTY_NAMES.items():
-        result.append(f"{key}. {name}")
-    result.append("")
-    result.append("💡 數量可選1-10個")
-    return "\n".join(result)
-
-
-def parse_english_word_format(msg: str) -> Optional[tuple]:
-    """
-    解析英文單字格式：難度數字/數量數字
-    例如：2/3 表示難度 2（中級），數量 3
-    """
-    if '/' in msg:
-        parts = msg.split('/')
-        if len(parts) == 2:
-            try:
-                difficulty_id = int(parts[0].strip())
-                count = int(parts[1].strip())
-                return difficulty_id, count
-            except ValueError:
-                return None
-    return None
-
-
-def handle_english_word_input(user_id: str, msg: str) -> Tuple[Union[str, FlexSendMessage], bool]:
-    """
-    處理英文單字輸入，返回單字內容或提示訊息
-    返回: (結果, 是否成功處理)
-    """
-    parsed_result = parse_english_word_format(msg)
-    if parsed_result:
-        difficulty_id, count = parsed_result
-        if 1 <= difficulty_id <= len(DIFFICULTY_NAMES) and 1 <= count <= 10:
-            return get_english_words(user_id, difficulty_id, count), True  # 成功獲取單字
-        else:
-            return generate_english_word_count_options(), False  # 參數錯誤，需要重新輸入
-    else:
-        return generate_english_word_count_options(), False  # 格式錯誤，需要重新輸入
 
 
 def get_english_words(user_id: str, difficulty_id: int, count: int):
@@ -388,7 +345,7 @@ def get_english_difficulty_menu() -> FlexSendMessage:
 def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
     """生成英文單字數量選單"""
     difficulty_name = DIFFICULTY_NAMES.get(difficulty_id, "英文單字")
-    
+
     title = TextComponent(
         text=f"📚 {difficulty_name}",
         weight="bold",

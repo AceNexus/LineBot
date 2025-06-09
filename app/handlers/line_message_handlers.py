@@ -9,7 +9,17 @@ from linebot.models import (
 
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
-from app.utils.english_subscribe import get_subscription_menu
+from app.utils.english_subscribe import (
+    get_subscription_menu,
+    get_difficulty_menu,
+    get_count_menu,
+    get_time_menu,
+    get_subscription_confirm,
+    handle_subscription_time,
+    handle_subscription_save,
+    handle_subscription_view,
+    handle_subscription_cancel
+)
 from app.utils.english_words import (
     get_english_difficulty_menu, get_english_count_menu,
     get_english_words
@@ -69,6 +79,23 @@ def handle_postback(event):
                 response = get_english_difficulty_menu()
             elif action == 'english_subscribe':
                 response = get_subscription_menu()
+            elif action == 'english_subscribe_setup':
+                response = get_difficulty_menu()
+            elif 'english_subscribe_difficulty' in data:
+                difficulty_id = data['english_subscribe_difficulty'][0]
+                response = get_count_menu(difficulty_id)
+            elif 'english_subscribe_count' in data:
+                difficulty_id, count = data['english_subscribe_count'][0].split('/')
+                response = get_time_menu(difficulty_id, int(count))
+            elif 'english_subscribe_time' in data:
+                difficulty_id, count, selected_times = handle_subscription_time(data)
+                response = get_subscription_confirm(difficulty_id, count, selected_times)
+            elif 'english_subscribe_save' in data:
+                response = handle_subscription_save(data, event.source.user_id)
+            elif action == 'english_subscribe_view':
+                response = handle_subscription_view(event.source.user_id)
+            elif action == 'english_subscribe_cancel':
+                response = handle_subscription_cancel(event.source.user_id)
             elif english_difficulty:
                 response = get_english_count_menu(english_difficulty)
             elif english_count:
