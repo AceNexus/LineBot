@@ -1,7 +1,6 @@
 import logging
 import time
-from enum import Enum
-from typing import Dict, Any, List, Union, Optional
+from typing import Dict, List, Union
 from urllib.parse import parse_qs
 
 from linebot.models import (
@@ -11,6 +10,7 @@ from linebot.models import (
 
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
+from app.utils.english_subscribe import get_subscription_menu
 from app.utils.english_words import (
     get_english_difficulty_menu, get_english_count_menu,
     get_english_words
@@ -23,24 +23,12 @@ from app.utils.news import get_news_topic_menu, get_news_count_menu, get_news
 
 logger = logging.getLogger(__name__)
 
-
-class UserState(Enum):
-    NORMAL = "normal"
-
-
 """定義命令別名"""
 MENU_COMMANDS = ["0", "啊哇呾喀呾啦", "menu", "選單"]
-NEWS_COMMANDS = ["1"]
-MOVIE_COMMANDS = ["2"]
-JAPANESE_WORD_COMMANDS = ["3"]
-ENGLISH_WORD_COMMANDS = ["4"]
 LUMOS_COMMANDS = ["路摸思", "lumos"]
 
 # 按鈕冷卻時間（秒）
-BUTTON_COOLDOWN = 3.0
-
-"""用戶狀態追蹤字典"""
-user_states: Dict[str, Dict[str, Any]] = {}
+BUTTON_COOLDOWN = 1.5
 
 """追蹤使用者最後操作時間"""
 user_last_action_time: Dict[str, float] = {}
@@ -93,13 +81,15 @@ def handle_postback(event):
             response = get_japanese_word(user_id)
         elif action == 'english':
             response = get_english_difficulty_menu()
+        elif action == 'english_subscribe':
+            response = get_subscription_menu()
         elif english_difficulty:
             response = get_english_count_menu(english_difficulty)
         elif english_count:
             difficulty_id, count = english_count.split('/')
             response = get_english_words(user_id, int(difficulty_id), int(count))
         else:
-            response = "無效的操作"
+            response = "這功能正在裝上輪子，還在趕來的路上"
 
         reply_to_user(event.reply_token, response)
 
@@ -125,56 +115,14 @@ def process_text_message(event):
 
 def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMessage, FlexSendMessage, List]:
     msg = message_text.strip().lower()
-    user_data = get_user_data(user_id)
-    current_state = user_data["state"]
 
     if msg in MENU_COMMANDS:
-        clear_user_state(user_id)
         return get_menu()
 
-    if current_state == UserState.NORMAL:
-        command_response = handle_command(user_id, msg)
-        if command_response is not None:
-            return command_response
-
-    clear_user_state(user_id)
-    return groq_service.chat_with_groq(user_id, message_text)
-
-
-def handle_command(user_id: str, msg: str) -> Optional[Union[str, TextSendMessage, FlexSendMessage, List]]:
-    if msg in NEWS_COMMANDS:
-        return get_news_topic_menu()
-    elif msg in MOVIE_COMMANDS:
-        return get_movies()
-    elif msg in JAPANESE_WORD_COMMANDS:
-        return get_japanese_word(user_id)
-    elif msg in ENGLISH_WORD_COMMANDS:
-        return get_english_difficulty_menu()
-    elif msg in LUMOS_COMMANDS:
+    if msg in LUMOS_COMMANDS:
         return get_lumos()
-    return None
 
-
-def get_user_data(user_id: str) -> Dict[str, Any]:
-    """獲取用戶數據，如果不存在則創建"""
-    if user_id not in user_states:
-        user_states[user_id] = {
-            "state": UserState.NORMAL,
-            "last_action_time": 0
-        }
-    return user_states[user_id]
-
-
-def set_user_state(user_id: str, state: UserState):
-    """設置用戶狀態"""
-    user_data = get_user_data(user_id)
-    user_data["state"] = state
-
-
-def clear_user_state(user_id: str):
-    """清除用戶狀態"""
-    if user_id in user_states:
-        user_states[user_id]["state"] = UserState.NORMAL
+    return groq_service.chat_with_groq(user_id, message_text)
 
 
 def reply_to_user(reply_token: str, message: Union[str, TextSendMessage, FlexSendMessage, List]):
