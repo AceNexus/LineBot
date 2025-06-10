@@ -121,7 +121,7 @@ def get_single_english_word(user_id: str, difficulty_level: str) -> Union[dict, 
 
     try:
         if isinstance(response, str):
-            logger.debug(f"Response is a string: {response[:200]}")
+            logger.info(f"Response is a string: {response[:200]}")
             try:
                 word_data = json.loads(response)
             except json.JSONDecodeError:
@@ -134,7 +134,7 @@ def get_single_english_word(user_id: str, difficulty_level: str) -> Union[dict, 
                     raise ValueError("Unable to extract JSON format from the string response")
         elif hasattr(response, 'text'):
             response_text = response.text
-            logger.debug(f"Response has text attribute: {response_text[:200]}")
+            logger.info(f"Response has text attribute: {response_text[:200]}")
             try:
                 word_data = json.loads(response_text)
             except json.JSONDecodeError:

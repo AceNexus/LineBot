@@ -51,14 +51,14 @@ def is_user_processing(user_id: str) -> bool:
 def mark_user_processing(user_id: str) -> None:
     """標記用戶為處理中"""
     with processing_lock:
-        logger.debug(f"Mark processing: {user_id}")
+        logger.info(f"Mark processing: {user_id}")
         processing_users.add(user_id)
 
 
 def unmark_user_processing(user_id: str) -> None:
     """移除用戶的處理中標記"""
     with processing_lock:
-        logger.debug(f"Unmark processing: {user_id}")
+        logger.info(f"Unmark processing: {user_id}")
         processing_users.discard(user_id)
 
 
