@@ -1,6 +1,5 @@
 import logging
-from threading import Lock
-from typing import List, Union, Set
+from typing import List, Union
 from urllib.parse import parse_qs
 
 from linebot.models import (
@@ -37,44 +36,14 @@ logger = logging.getLogger(__name__)
 MENU_COMMANDS = ["0", "啊哇呾喀呾啦", "menu", "選單"]
 LUMOS_COMMANDS = ["路摸思", "lumos"]
 
+# TODO
 """追蹤正在處理的用戶請求"""
-processing_users: Set[str] = set()
-processing_lock = Lock()
-
-
-def is_user_processing(user_id: str) -> bool:
-    """檢查用戶是否正在處理中"""
-    with processing_lock:
-        return user_id in processing_users
-
-
-def mark_user_processing(user_id: str) -> None:
-    """標記用戶為處理中"""
-    with processing_lock:
-        logger.info(f"Mark processing: {user_id}")
-        processing_users.add(user_id)
-
-
-def unmark_user_processing(user_id: str) -> None:
-    """移除用戶的處理中標記"""
-    with processing_lock:
-        logger.info(f"Unmark processing: {user_id}")
-        processing_users.discard(user_id)
-
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
     user_id = event.source.user_id
 
-    # 檢查是否正在處理中
-    if is_user_processing(user_id):
-        reply_to_user(event.reply_token, "請求執行中，請稍候...")
-        return
-
     try:
-        # 標記用戶為處理中
-        mark_user_processing(user_id)
-
         data = parse_qs(event.postback.data)
         action = data.get('action', [''])[0]
         news_topic = data.get('news_topic', [''])[0]
@@ -129,9 +98,6 @@ def handle_postback(event):
     except Exception as e:
         logger.error(f"處理 postback 事件時發生錯誤: {e}", exc_info=True)
         reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
-    finally:
-        # 移除處理中標記
-        unmark_user_processing(user_id)
 
 
 @handler.add(MessageEvent, message=TextMessage)
@@ -139,24 +105,12 @@ def process_text_message(event):
     user_id = event.source.user_id
     message_text = event.message.text
 
-    # 檢查是否正在處理中
-    if is_user_processing(user_id):
-        reply_to_user(event.reply_token, "請求執行中，請稍候...")
-        return
-
     try:
-        # 標記用戶為處理中
-        mark_user_processing(user_id)
-
         response = process_user_input(user_id, message_text)
         reply_to_user(event.reply_token, response)
-
     except Exception as e:
         logger.error(f"處理文字訊息時發生錯誤: {e}", exc_info=True)
         reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
-    finally:
-        # 移除處理中標記
-        unmark_user_processing(user_id)
 
 
 def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMessage, FlexSendMessage, List]:
