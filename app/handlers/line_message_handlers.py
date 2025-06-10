@@ -1,4 +1,5 @@
 import logging
+from threading import Lock
 from typing import List, Union, Set
 from urllib.parse import parse_qs
 
@@ -38,115 +39,124 @@ LUMOS_COMMANDS = ["路摸思", "lumos"]
 
 """追蹤正在處理的用戶請求"""
 processing_users: Set[str] = set()
+processing_lock = Lock()
+
+
+def is_user_processing(user_id: str) -> bool:
+    """檢查用戶是否正在處理中"""
+    with processing_lock:
+        return user_id in processing_users
+
+
+def mark_user_processing(user_id: str) -> None:
+    """標記用戶為處理中"""
+    with processing_lock:
+        logger.debug(f"Mark processing: {user_id}")
+        processing_users.add(user_id)
+
+
+def unmark_user_processing(user_id: str) -> None:
+    """移除用戶的處理中標記"""
+    with processing_lock:
+        logger.debug(f"Unmark processing: {user_id}")
+        processing_users.discard(user_id)
 
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
-    user_id = None
+    user_id = event.source.user_id
+
+    # 檢查是否正在處理中
+    if is_user_processing(user_id):
+        reply_to_user(event.reply_token, "請求執行中，請稍候...")
+        return
+
     try:
-        user_id = event.source.user_id
-
-        # 檢查是否正在處理中
-        if user_id in processing_users:
-            reply_to_user(event.reply_token, "請求執行中，請稍候...")
-            return
-
         # 標記用戶為處理中
-        processing_users.add(user_id)
+        mark_user_processing(user_id)
 
-        try:
-            data = parse_qs(event.postback.data)
-            action = data.get('action', [''])[0]
-            news_topic = data.get('news_topic', [''])[0]
-            news_count = data.get('news_count', [''])[0]
-            english_difficulty = data.get('english_difficulty', [''])[0]
-            english_count = data.get('english_count', [''])[0]
+        data = parse_qs(event.postback.data)
+        action = data.get('action', [''])[0]
+        news_topic = data.get('news_topic', [''])[0]
+        news_count = data.get('news_count', [''])[0]
+        english_difficulty = data.get('english_difficulty', [''])[0]
+        english_count = data.get('english_count', [''])[0]
 
-            logger.info(f"Received postback from {user_id}: {action}")
+        logger.info(f"Received postback from {user_id}: {action}")
 
-            if action == 'news':
-                response = get_news_topic_menu()
-            elif news_topic:
-                response = get_news_count_menu(news_topic)
-            elif news_count:
-                topic_id, count = news_count.split('/')
-                response = get_news(topic_id, int(count))
-            elif action == 'movie':
-                response = get_movies()
-            elif action == 'japanese':
-                response = get_japanese_word(user_id)
-            elif action == 'english':
-                response = get_english_difficulty_menu()
-            elif action == 'english_subscribe':
-                response = get_subscription_menu()
-            elif action == 'english_subscribe_setup':
-                response = get_difficulty_menu()
-            elif 'english_subscribe_difficulty' in data:
-                difficulty_id = data['english_subscribe_difficulty'][0]
-                response = get_count_menu(difficulty_id)
-            elif 'english_subscribe_count' in data:
-                difficulty_id, count = data['english_subscribe_count'][0].split('/')
-                response = get_time_menu(difficulty_id, int(count))
-            elif 'english_subscribe_time' in data:
-                difficulty_id, count, selected_times = handle_subscription_time(data)
-                response = get_subscription_confirm(difficulty_id, count, selected_times)
-            elif 'english_subscribe_save' in data:
-                response = handle_subscription_save(data, event.source.user_id)
-            elif action == 'english_subscribe_view':
-                response = handle_subscription_view(event.source.user_id)
-            elif action == 'english_subscribe_cancel':
-                response = handle_subscription_cancel(event.source.user_id)
-            elif english_difficulty:
-                response = get_english_count_menu(english_difficulty)
-            elif english_count:
-                difficulty_id, count = english_count.split('/')
-                response = get_english_words(user_id, int(difficulty_id), int(count))
-            else:
-                response = "這功能正在裝上輪子，還在趕來的路上"
+        if action == 'news':
+            response = get_news_topic_menu()
+        elif news_topic:
+            response = get_news_count_menu(news_topic)
+        elif news_count:
+            topic_id, count = news_count.split('/')
+            response = get_news(topic_id, int(count))
+        elif action == 'movie':
+            response = get_movies()
+        elif action == 'japanese':
+            response = get_japanese_word(user_id)
+        elif action == 'english':
+            response = get_english_difficulty_menu()
+        elif action == 'english_subscribe':
+            response = get_subscription_menu()
+        elif action == 'english_subscribe_setup':
+            response = get_difficulty_menu()
+        elif 'english_subscribe_difficulty' in data:
+            difficulty_id = data['english_subscribe_difficulty'][0]
+            response = get_count_menu(difficulty_id)
+        elif 'english_subscribe_count' in data:
+            difficulty_id, count = data['english_subscribe_count'][0].split('/')
+            response = get_time_menu(difficulty_id, int(count))
+        elif 'english_subscribe_time' in data:
+            difficulty_id, count, selected_times = handle_subscription_time(data)
+            response = get_subscription_confirm(difficulty_id, count, selected_times)
+        elif 'english_subscribe_save' in data:
+            response = handle_subscription_save(data, user_id)
+        elif action == 'english_subscribe_view':
+            response = handle_subscription_view(user_id)
+        elif action == 'english_subscribe_cancel':
+            response = handle_subscription_cancel(user_id)
+        elif english_difficulty:
+            response = get_english_count_menu(english_difficulty)
+        elif english_count:
+            difficulty_id, count = english_count.split('/')
+            response = get_english_words(user_id, int(difficulty_id), int(count))
+        else:
+            response = "這功能正在裝上輪子，還在趕來的路上"
 
-            reply_to_user(event.reply_token, response)
-
-        finally:
-            # 無論成功或失敗都要移除處理標記
-            if user_id:
-                processing_users.discard(user_id)
+        reply_to_user(event.reply_token, response)
 
     except Exception as e:
-        # 確保異常時也移除處理標記
-        if user_id:
-            processing_users.discard(user_id)
         logger.error(f"處理 postback 事件時發生錯誤: {e}", exc_info=True)
         reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
+    finally:
+        # 移除處理中標記
+        unmark_user_processing(user_id)
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def process_text_message(event):
-    user_id = None
+    user_id = event.source.user_id
+    message_text = event.message.text
+
+    # 檢查是否正在處理中
+    if is_user_processing(user_id):
+        reply_to_user(event.reply_token, "請求執行中，請稍候...")
+        return
+
     try:
-        message_text = event.message.text
-        user_id = event.source.user_id
-        logger.info(f"Received text message from {user_id}: {message_text}")
-
-        # 檢查是否正在處理中
-        if user_id in processing_users:
-            reply_to_user(event.reply_token, "請求執行中，請稍候...")
-            return
-
         # 標記用戶為處理中
-        processing_users.add(user_id)
+        mark_user_processing(user_id)
 
-        try:
-            response = process_user_input(user_id, message_text)
-            reply_to_user(event.reply_token, response)
-        finally:
-            if user_id:
-                processing_users.discard(user_id)
+        response = process_user_input(user_id, message_text)
+        reply_to_user(event.reply_token, response)
 
     except Exception as e:
-        if user_id:
-            processing_users.discard(user_id)
         logger.error(f"處理文字訊息時發生錯誤: {e}", exc_info=True)
         reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
+    finally:
+        # 移除處理中標記
+        unmark_user_processing(user_id)
 
 
 def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMessage, FlexSendMessage, List]:
