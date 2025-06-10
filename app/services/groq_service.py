@@ -4,11 +4,13 @@ from groq import Groq
 
 logger = logging.getLogger(__name__)
 
-# 全域變量 groq_client
+# 將 Groq 客戶端的日誌級別設為 WARNING，避免顯示重試訊息
+logging.getLogger("groq").setLevel(logging.WARNING)
+logging.getLogger("groq._base_client").setLevel(logging.WARNING)
+
 groq_client = None
 
 
-# 初始化 Groq client，返回已初始化的 groq_client
 def get_groq_client(GROQ_API_KEY) -> Groq:
     global groq_client
     if groq_client is None:
@@ -16,7 +18,6 @@ def get_groq_client(GROQ_API_KEY) -> Groq:
     return groq_client
 
 
-# 儲存每位使用者對話歷史的字典，按功能分類
 user_sessions = {
     'chat': {},  # 一般聊天
     'english': {},  # 英文學習
@@ -40,7 +41,6 @@ FALLBACK_MODELS = [
     "allam-2-7b",  # 每分鐘 6,000 tokens、每日 7,000 請求
 ]
 
-# 優化的系統提示詞
 SYSTEM_PROMPTS = {
     'chat':
         """
@@ -69,8 +69,7 @@ SYSTEM_PROMPTS = {
 def chat_with_groq(user_id: str, message: str, model: str = "llama-3.3-70b-versatile",
                    session_type: str = "chat") -> str:
     """
-    使用 Groq 語言模型進行對話，支援多輪對話和不同功能的會話隔離。
-    如果指定模型發生異常，將自動嘗試備用模型。
+    使用 Groq 語言模型進行對話，支援多輪對話和不同功能的會話隔離。如果指定模型發生異常，將自動嘗試備用模型。
 
     :param user_id: 使用者 ID，用來識別每個使用者
     :param message: 使用者輸入訊息
@@ -78,9 +77,6 @@ def chat_with_groq(user_id: str, message: str, model: str = "llama-3.3-70b-versa
     :param session_type: 會話類型 ('chat', 'english', 'japanese')，預設為 'chat'
     :return: 模型回應的內容
     """
-    # 確保 session_type 有效
-    if session_type not in user_sessions:
-        session_type = 'chat'
 
     # 初始化使用者對話紀錄，使用對應的系統提示詞
     if user_id not in user_sessions[session_type]:
@@ -93,7 +89,7 @@ def chat_with_groq(user_id: str, message: str, model: str = "llama-3.3-70b-versa
 
     # 確定要嘗試的模型順序
     models_to_try = [m for m in FALLBACK_MODELS if m != model]
-    models_to_try.insert(0, model)  # 將指定的模型放在最前面
+    models_to_try.insert(0, model)
 
     reply = None
     used_model = None
@@ -107,25 +103,18 @@ def chat_with_groq(user_id: str, message: str, model: str = "llama-3.3-70b-versa
             response = groq_client.chat.completions.create(
                 messages=user_sessions[session_type][user_id],
                 model=current_model,
-                temperature=0.7,  # 適當的創意度
-                max_tokens=1000,  # 限制回覆長度
+                temperature=0.7,
+                max_tokens=1000,
                 timeout=3
             )
 
-            # 取得模型回應
             reply = response.choices[0].message.content
             used_model = current_model
             break
 
         except Exception as e:
             error_msg = str(e).lower()
-
-            # 記錄異常詳情
-            if "rate limit" in error_msg or "quota" in error_msg:
-                logger.warning(f"Model {current_model} has reached usage limit: {str(e)}")
-            else:
-                logger.error(f"An exception occurred with model {current_model}: {str(e)}")
-
+            logger.error(f"An exception occurred with model {current_model}: {error_msg}")
             continue
 
     if reply is None:
