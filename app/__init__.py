@@ -10,6 +10,7 @@ from app.config import print_config_info
 from app.extensions import init_line_bot_api
 from app.logger import setup_logger
 from app.services.groq_service import get_groq_client
+from app.utils.scheduler import init_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,9 @@ def create_app():
     # 導入消息處理器
     from app.handlers.line_message_handlers import process_text_message
     logger.info("Message handlers loaded")
+
+    # 初始化排程器
+    scheduler = init_scheduler()
 
     return app
 
