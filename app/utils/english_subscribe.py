@@ -9,6 +9,9 @@ from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextC
 
 from app.models.subscription import Subscription, SubscriptionManager
 from app.utils.english_words import DIFFICULTY_NAMES
+from app.utils.theme import (
+    COLOR_THEME
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,20 +26,6 @@ SUBSCRIPTION_TIMES = {
 
 # 建立訂閱管理器實例
 subscription_manager = SubscriptionManager()
-
-# 定義統一的顏色主題
-COLOR_THEME = {
-    'primary': '#42A5F5',        # 清新亮藍，較柔和但仍飽和
-    'success': '#66BB6A',        # 柔和草綠，代表正向
-    'warning': '#FFA726',        # 鮮亮橙黃，醒目但不辣眼
-    'error': '#EF5350',          # 柔紅，有警示感又不暴力
-    'neutral': '#90A4AE',        # 淺藍灰，乾淨不沉悶
-    'text_primary': '#FAFAFA',   # 淡米白，比純白更溫和
-    'text_secondary': '#EEEEEE', # 淺灰白，做次要字體剛好
-    'text_hint': '#B3E5FC',      # 淺亮藍，給提示很舒服
-    'separator': '#81D4FA',      # 淡藍分隔線，輕盈感強
-    'background': '#E3F2FD'      # 淺藍白背景，明亮柔和
-}
 
 
 def save_subscription(user_id: str, difficulty_id: str, count: int, time_id: str) -> bool:
@@ -561,7 +550,7 @@ def get_subscription_menu() -> FlexSendMessage:
                 data="action=english_subscribe_setup"
             ),
             style="primary",
-            color="#FFB366",
+            color=COLOR_THEME['error'],
             margin="sm",
             height="sm"
         ),
@@ -571,7 +560,7 @@ def get_subscription_menu() -> FlexSendMessage:
                 data="action=english_subscribe_view"
             ),
             style="primary",
-            color="#FFB366",
+            color=COLOR_THEME['error'],
             margin="sm",
             height="sm"
         ),
@@ -581,7 +570,7 @@ def get_subscription_menu() -> FlexSendMessage:
                 data="action=english_subscribe_cancel"
             ),
             style="secondary",
-            color="#FF7777",
+            color=COLOR_THEME['error'],
             margin="sm",
             height="sm"
         )
