@@ -1,6 +1,12 @@
 import logging
 
 from groq import Groq
+from linebot.models import (
+    FlexSendMessage, BubbleContainer, BoxComponent,
+    TextComponent, BubbleStyle, BlockStyle, SeparatorComponent
+)
+
+from app.utils.theme import COLOR_THEME
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +29,30 @@ user_sessions = {
     'english': {},  # 英文學習
     'japanese': {},  # 日文學習
 }
+
+# 追蹤用戶的 AI 回應狀態
+user_ai_status = {}
+
+
+def toggle_ai_status(user_id: str) -> bool:
+    """
+    切換用戶的 AI 回應狀態
+    :param user_id: 用戶 ID
+    :return: 切換後的狀態（True 表示開啟，False 表示關閉）
+    """
+    current_status = user_ai_status.get(user_id, True)
+    user_ai_status[user_id] = not current_status
+    return user_ai_status[user_id]
+
+
+def get_ai_status(user_id: str) -> bool:
+    """
+    獲取用戶的 AI 回應狀態
+    :param user_id: 用戶 ID
+    :return: 當前狀態（True 表示開啟，False 表示關閉）
+    """
+    return user_ai_status.get(user_id, True)
+
 
 # 20250505 根據模型性能和限制重新排序的備用模型列表
 FALLBACK_MODELS = [
@@ -149,3 +179,63 @@ def _trim_conversation_history(user_id: str, session_type: str = "chat", max_tur
                 history[0],  # 系統提示
                 *history[-(max_turns * 2):]  # 最近的對話
             ]
+
+
+def get_ai_status_flex(user_id: str) -> FlexSendMessage:
+    """
+    生成 AI 回應狀態的 Flex Message
+    :param user_id: 用戶 ID
+    :return: FlexSendMessage 物件
+    """
+    current_status = get_ai_status(user_id)
+    status_text = "開啟" if current_status else "關閉"
+    status_color = COLOR_THEME['success'] if current_status else COLOR_THEME['error']
+
+    title = TextComponent(
+        text="AI 回應狀態",
+        weight="bold",
+        size="xl",
+        align="center",
+        color=COLOR_THEME['text_primary'],
+        wrap=True
+    )
+
+    status = TextComponent(
+        text=f"目前狀態：{status_text}",
+        size="lg",
+        color=status_color,
+        align="center",
+        wrap=True,
+        margin="md"
+    )
+
+    description = TextComponent(
+        text="您可以隨時在選單中切換 AI 回應功能",
+        size="sm",
+        color=COLOR_THEME['text_secondary'],
+        align="center",
+        wrap=True,
+        margin="sm"
+    )
+
+    body_box = BoxComponent(
+        layout="vertical",
+        contents=[
+            title,
+            SeparatorComponent(margin="lg", color=COLOR_THEME['separator']),
+            status,
+            description
+        ],
+        spacing="md",
+        padding_all="lg",
+        background_color=COLOR_THEME['card']
+    )
+
+    bubble = BubbleContainer(
+        body=body_box,
+        styles=BubbleStyle(
+            body=BlockStyle(background_color=COLOR_THEME['card'])
+        )
+    )
+
+    return FlexSendMessage(alt_text=f"AI 回應狀態：{status_text}", contents=bubble)

@@ -9,6 +9,7 @@ from linebot.models import (
 
 from app.extensions import line_bot_api, handler
 from app.services import groq_service
+from app.services.groq_service import get_ai_status, get_ai_status_flex, toggle_ai_status
 from app.utils.english_subscribe import (
     get_subscription_menu,
     get_difficulty_menu,
@@ -39,6 +40,7 @@ LUMOS_COMMANDS = ["路摸思", "lumos"]
 # TODO
 """追蹤正在處理的用戶請求"""
 
+
 @handler.add(PostbackEvent)
 def handle_postback(event):
     user_id = event.source.user_id
@@ -53,7 +55,10 @@ def handle_postback(event):
 
         logger.info(f"Received postback from {user_id}: {action}")
 
-        if action == 'news':
+        if action == 'toggle_ai':
+            toggle_ai_status(user_id)
+            response = get_ai_status_flex(user_id)
+        elif action == 'news':
             response = get_news_topic_menu()
         elif news_topic:
             response = get_news_count_menu(news_topic)
@@ -121,6 +126,10 @@ def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMe
 
     if msg in LUMOS_COMMANDS:
         return get_lumos()
+
+    # 檢查 AI 回應狀態
+    if not get_ai_status(user_id):
+        return get_ai_status_flex(user_id)
 
     return groq_service.chat_with_groq(user_id, message_text)
 
