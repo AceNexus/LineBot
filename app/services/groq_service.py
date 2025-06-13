@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 from groq import Groq
 from linebot.models import (
@@ -97,7 +98,7 @@ SYSTEM_PROMPTS = {
 
 
 def chat_with_groq(user_id: str, message: str, model: str = "llama-3.3-70b-versatile",
-                   session_type: str = "chat") -> str:
+                   session_type: str = "chat") -> Union[str, None]:
     """
     使用 Groq 語言模型進行對話，支援多輪對話和不同功能的會話隔離。如果指定模型發生異常，將自動嘗試備用模型。
 
@@ -105,8 +106,12 @@ def chat_with_groq(user_id: str, message: str, model: str = "llama-3.3-70b-versa
     :param message: 使用者輸入訊息
     :param model: 使用的模型名稱，預設為 llama-3.3-70b-versatile
     :param session_type: 會話類型 ('chat', 'english', 'japanese')，預設為 'chat'
-    :return: 模型回應的內容
+    :return: 模型回應的內容，如果 AI 功能關閉則返回 None
     """
+
+    # 檢查 AI 回應狀態
+    if not get_ai_status(user_id):
+        return None
 
     # 初始化使用者對話紀錄，使用對應的系統提示詞
     if user_id not in user_sessions[session_type]:
