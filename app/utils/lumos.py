@@ -1,7 +1,9 @@
 from linebot.models import (
     BubbleContainer, FlexSendMessage, BoxComponent,
-    TextComponent, URIAction
+    TextComponent, URIAction, BubbleStyle, BlockStyle
 )
+
+from app.utils.theme import COLOR_THEME
 
 
 def get_lumos():
@@ -10,14 +12,14 @@ def get_lumos():
         weight="bold",
         size="xl",
         align="center",
-        color="#1DB446",
+        color=COLOR_THEME['text_primary'],
         wrap=True
     )
 
     subtitle = TextComponent(
         text="點選下方按鈕開啟",
         size="sm",
-        color="#888888",
+        color=COLOR_THEME['text_secondary'],
         align="center",
         wrap=True
     )
@@ -26,7 +28,8 @@ def get_lumos():
         layout="vertical",
         contents=[title, subtitle],
         spacing="md",
-        padding_all="lg"
+        padding_all="lg",
+        background_color=COLOR_THEME['card']
     )
 
     resources = [
@@ -57,29 +60,35 @@ def get_lumos():
                     text=name,
                     size="md",
                     weight="bold",
-                    color="#1DB446",
+                    color=COLOR_THEME['info'],
                     align="center",
                     wrap=True,
                     action=URIAction(label=name, uri=url)
                 )
             ],
             padding_all="md",
-            border_color="#1DB446",
+            border_color=COLOR_THEME['separator'],
             border_width="normal",
             corner_radius="md",
-            margin="sm"
+            margin="sm",
+            background_color=COLOR_THEME['card']
         ))
 
     footer_box = BoxComponent(
         layout="vertical",
         contents=footer_contents,
         spacing="sm",
-        padding_all="lg"
+        padding_all="lg",
+        background_color=COLOR_THEME['card']
     )
 
     bubble = BubbleContainer(
         body=body_box,
-        footer=footer_box
+        footer=footer_box,
+        styles=BubbleStyle(
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
+        )
     )
 
     return FlexSendMessage(alt_text="技術學習資源", contents=bubble)

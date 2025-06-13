@@ -13,6 +13,8 @@ from linebot.models import (
     SeparatorComponent, BubbleStyle, BlockStyle
 )
 
+from app.utils.theme import COLOR_THEME
+
 logger = logging.getLogger(__name__)
 
 # 主題列表
@@ -117,7 +119,7 @@ def fetch_google_news_flex(topic_name, topic_url, count):
                 short_url = shorten_url(full_url)
 
                 # 為每條新聞創建一個 bubble
-                header_text = TextComponent(text=topic_name, weight="bold", color="#1f76e3", size="sm")
+                header_text = TextComponent(text=topic_name, weight="bold", color=COLOR_THEME['primary'], size="sm")
                 header_box = BoxComponent(layout="vertical", contents=[header_text], padding_bottom="md")
 
                 body_text = TextComponent(text=title, weight="bold", wrap=True, size="md")
@@ -126,7 +128,7 @@ def fetch_google_news_flex(topic_name, topic_url, count):
                 button = ButtonComponent(
                     action=URIAction(label="閱讀全文", uri=short_url),
                     style="primary",
-                    color="#1f76e3"
+                    color=COLOR_THEME['primary']
                 )
                 footer_box = BoxComponent(layout="vertical", contents=[button], padding_top="sm")
 
@@ -140,17 +142,11 @@ def fetch_google_news_flex(topic_name, topic_url, count):
 
         # 將所有 bubble 放入 carousel 容器
         carousel = CarouselContainer(contents=bubbles)
+        return FlexSendMessage(alt_text=f"{topic_name}新聞", contents=carousel)
 
-        flex_message = FlexSendMessage(
-            alt_text="Google 新聞摘要",
-            contents=carousel
-        )
-
-        return flex_message
-
-    except requests.RequestException as e:
-        logger.error(f"Failed to retrieve Google News content: {e}")
-        return TextSendMessage(text="無法取得新聞內容")
+    except Exception as e:
+        logger.error(f"獲取新聞失敗: {e}")
+        return TextSendMessage(text="抱歉，獲取新聞時發生錯誤，請稍後再試。")
 
 
 def shorten_url(long_url):
@@ -174,14 +170,14 @@ def get_news_topic_menu():
         weight="bold",
         size="xl",
         align="center",
-        color="#FFFFFF",
+        color=COLOR_THEME['text_primary'],
         wrap=True
     )
 
     subtitle = TextComponent(
         text="請選擇新聞主題",
         size="sm",
-        color="#E0E0E0",
+        color=COLOR_THEME['text_secondary'],
         align="center",
         wrap=True,
         margin="sm"
@@ -192,11 +188,11 @@ def get_news_topic_menu():
         contents=[
             title,
             subtitle,
-            SeparatorComponent(margin="lg", color="#666666")
+            SeparatorComponent(margin="lg", color=COLOR_THEME['separator'])
         ],
         spacing="md",
         padding_all="lg",
-        background_color="#404040"
+        background_color=COLOR_THEME['background']
     )
 
     buttons = []
@@ -208,7 +204,7 @@ def get_news_topic_menu():
                     data=f"news_topic={topic_id}"
                 ),
                 style="primary",
-                color="#FF7777",
+                color=COLOR_THEME['primary'],
                 margin="sm",
                 height="sm"
             )
@@ -219,15 +215,15 @@ def get_news_topic_menu():
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color="#404040"
+        background_color=COLOR_THEME['background']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color="#404040"),
-            footer=BlockStyle(background_color="#404040")
+            body=BlockStyle(background_color=COLOR_THEME['background']),
+            footer=BlockStyle(background_color=COLOR_THEME['background'])
         )
     )
 
@@ -243,14 +239,14 @@ def get_news_count_menu(topic_id: str):
         weight="bold",
         size="xl",
         align="center",
-        color="#FFFFFF",
+        color=COLOR_THEME['text_primary'],
         wrap=True
     )
 
     subtitle = TextComponent(
         text="請選擇要顯示的新聞數量",
         size="sm",
-        color="#E0E0E0",
+        color=COLOR_THEME['text_secondary'],
         align="center",
         wrap=True,
         margin="sm"
@@ -261,11 +257,11 @@ def get_news_count_menu(topic_id: str):
         contents=[
             title,
             subtitle,
-            SeparatorComponent(margin="lg", color="#666666")
+            SeparatorComponent(margin="lg", color=COLOR_THEME['separator'])
         ],
         spacing="md",
         padding_all="lg",
-        background_color="#404040"
+        background_color=COLOR_THEME['background']
     )
 
     buttons = []
@@ -277,7 +273,7 @@ def get_news_count_menu(topic_id: str):
                     data=f"news_count={topic_id}/{count}"
                 ),
                 style="primary",
-                color="#FF7777",
+                color=COLOR_THEME['primary'],
                 margin="sm",
                 height="sm"
             )
@@ -288,15 +284,15 @@ def get_news_count_menu(topic_id: str):
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color="#404040"
+        background_color=COLOR_THEME['background']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color="#404040"),
-            footer=BlockStyle(background_color="#404040")
+            body=BlockStyle(background_color=COLOR_THEME['background']),
+            footer=BlockStyle(background_color=COLOR_THEME['background'])
         )
     )
 

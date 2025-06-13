@@ -1,10 +1,12 @@
 import json
 import logging
 
-from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, ButtonComponent, URIAction
+from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, ButtonComponent, URIAction, \
+    BubbleStyle, BlockStyle
 
 from app.services.groq_service import chat_with_groq
 from app.utils.google_tts import generate_audio_url
+from app.utils.theme import COLOR_THEME
 
 logger = logging.getLogger(__name__)
 
@@ -118,8 +120,9 @@ def create_japanese_flex_bubble(word_data):
     header_box = BoxComponent(
         layout="vertical",
         contents=[
-            TextComponent(text="📖日文單字", weight="bold", size="lg")
-        ]
+            TextComponent(text="📖日文單字", weight="bold", size="lg", color=COLOR_THEME['text_primary'])
+        ],
+        background_color=COLOR_THEME['card']
     )
 
     body_contents = [
@@ -127,56 +130,59 @@ def create_japanese_flex_bubble(word_data):
             text=f"📚 {word_data['word']} ({word_data['part_of_speech']})",
             weight="bold",
             size="xl",
+            color=COLOR_THEME['text_primary'],
             wrap=True
         ),
         TextComponent(
             text=f"あ {word_data.get('hiragana', '')}",
             size="md",
-            color="#FF6B6B",
+            color=COLOR_THEME['info'],
             wrap=True
         ),
         TextComponent(
             text=f"🔊 {word_data.get('romaji', '')}",
             size="md",
-            color="#888888",
+            color=COLOR_THEME['neutral'],
             wrap=True
         ),
         TextComponent(
             text=f"💡 日文解釋: {word_data['definition_ja']}",
             size="sm",
-            color="#555555",
+            color=COLOR_THEME['text_secondary'],
             wrap=True
         ),
         TextComponent(
             text=f"📘 中文解釋: {word_data['definition_zh']}",
             size="sm",
-            color="#555555",
+            color=COLOR_THEME['text_secondary'],
             wrap=True
         ),
         TextComponent(
             text="✏️ 例句:",
             weight="bold",
             size="sm",
+            color=COLOR_THEME['text_primary'],
             wrap=True
         ),
         TextComponent(
             text=f"● {word_data['example_sentence']}",
             wrap=True,
             size="sm",
-            color="#333333"
+            color=COLOR_THEME['text_primary']
         ),
         TextComponent(
             text=f"○ {word_data['example_translation']}",
             wrap=True,
             size="sm",
-            color="#666666"
+            color=COLOR_THEME['text_secondary']
         )
     ]
 
     body_box = BoxComponent(
         layout="vertical",
         spacing="md",
-        contents=body_contents
+        contents=body_contents,
+        background_color=COLOR_THEME['card']
     )
 
     footer_box = BoxComponent(
@@ -189,7 +195,7 @@ def create_japanese_flex_bubble(word_data):
                     uri=word_audio_url
                 ),
                 style="primary",
-                color="#FF6B6B"
+                color=COLOR_THEME['primary']
             ),
             ButtonComponent(
                 action=URIAction(
@@ -197,16 +203,21 @@ def create_japanese_flex_bubble(word_data):
                     uri=example_audio_url
                 ),
                 style="secondary",
-                color="#4ECDC4"
+                color=COLOR_THEME['secondary']
             )
-        ]
+        ],
+        background_color=COLOR_THEME['card']
     )
 
     # 建立 BubbleContainer
     bubble = BubbleContainer(
         header=header_box,
         body=body_box,
-        footer=footer_box
+        footer=footer_box,
+        styles=BubbleStyle(
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
+        )
     )
 
     return bubble

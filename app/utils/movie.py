@@ -11,6 +11,8 @@ from linebot.models import (
 )
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
+from app.utils.theme import COLOR_THEME
+
 logger = logging.getLogger(__name__)
 
 # 配置
@@ -201,7 +203,7 @@ def create_bubble(movie: Dict) -> Optional[BubbleContainer]:
             contents.append(TextComponent(
                 text=movie['eng_title'],
                 size="sm",
-                color="#666666",
+                color=COLOR_THEME['text_secondary'],
                 wrap=True,
                 margin="xs"
             ))
@@ -209,9 +211,10 @@ def create_bubble(movie: Dict) -> Optional[BubbleContainer]:
         # 評分和分級
         rating_box = []
         if movie.get('rating'):
-            rating_box.append(TextComponent(text=f"⭐ {movie['rating']}", size="sm", color="#FFD700", flex=1))
+            rating_box.append(
+                TextComponent(text=f"⭐ {movie['rating']}", size="sm", color=COLOR_THEME['warning'], flex=1))
         if movie.get('cert'):
-            rating_box.append(TextComponent(text=f"🔞 {movie['cert']}", size="sm", color="#FF4757", flex=1))
+            rating_box.append(TextComponent(text=f"🔞 {movie['cert']}", size="sm", color=COLOR_THEME['error'], flex=1))
         if rating_box:
             contents.append(BoxComponent(layout="horizontal", contents=rating_box, margin="sm"))
 
@@ -219,21 +222,22 @@ def create_bubble(movie: Dict) -> Optional[BubbleContainer]:
         for info, icon in [(movie.get('duration'), '⏱️'), (movie.get('genre'), '🎬'), (movie.get('release'), '📅')]:
             if info:
                 contents.append(
-                    TextComponent(text=f"{icon} {info}", size="sm", color="#666666", wrap=True, margin="xs"))
+                    TextComponent(text=f"{icon} {info}", size="sm", color=COLOR_THEME['text_secondary'], wrap=True,
+                                  margin="xs"))
 
         # 按鈕
         buttons = []
         if movie.get('trailer'):
             buttons.append(ButtonComponent(
                 action=URIAction(label="官方預告", uri=movie['trailer']),
-                style="primary", color="#FF6B6B", flex=1
+                style="primary", color=COLOR_THEME['primary'], flex=1
             ))
 
         # YouTube搜尋連結
         youtube_url = create_youtube_link(movie.get('title', ''))
         buttons.append(ButtonComponent(
             action=URIAction(label="YouTube預告", uri=youtube_url),
-            style="secondary", color="#FF6B6B", flex=1
+            style="secondary", color=COLOR_THEME['success'], flex=1
         ))
 
         footer = None
