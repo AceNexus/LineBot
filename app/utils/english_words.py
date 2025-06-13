@@ -28,7 +28,7 @@ DIFFICULTY_NAMES = {
 }
 
 
-def get_english_words(user_id: str, difficulty_id: int, count: int):
+def get_english_words(chat_id: str, difficulty_id: int, count: int):
     """獲取指定難度和數量的英文單字"""
     difficulty_level = DIFFICULTY_LEVELS.get(str(difficulty_id))
     difficulty_name = DIFFICULTY_NAMES.get(str(difficulty_id), '英文單字')
@@ -36,17 +36,17 @@ def get_english_words(user_id: str, difficulty_id: int, count: int):
     if not difficulty_level:
         return f"找不到難度代碼：{difficulty_id}"
 
-    return fetch_english_words_flex(user_id, difficulty_name, difficulty_level, count)
+    return fetch_english_words_flex(chat_id, difficulty_name, difficulty_level, count)
 
 
-def fetch_english_words_flex(user_id: str, difficulty_name: str, difficulty_level: str, count: int):
+def fetch_english_words_flex(chat_id: str, difficulty_name: str, difficulty_level: str, count: int):
     """獲取英文單字並轉換為 Flex Message"""
     try:
         # 準備 bubbles 用於 carousel
         bubbles = []
 
         for i in range(count):
-            word_data = get_single_english_word(user_id, difficulty_level)
+            word_data = get_single_english_word(chat_id, difficulty_level)
 
             if isinstance(word_data, dict):
                 # 創建單字的 bubble
@@ -80,7 +80,7 @@ def fetch_english_words_flex(user_id: str, difficulty_name: str, difficulty_leve
         return "無法取得英文單字內容"
 
 
-def get_single_english_word(user_id: str, difficulty_level: str) -> Union[dict, str]:
+def get_single_english_word(chat_id: str, difficulty_level: str) -> Union[dict, str]:
     """
     獲取單個英文單字
     """
@@ -118,7 +118,7 @@ def get_single_english_word(user_id: str, difficulty_level: str) -> Union[dict, 
     """
 
     # 使用 'english' 會話類型，與一般聊天和日文學習分離
-    response = chat_with_groq(user_id, prompt, session_type="english")
+    response = chat_with_groq(chat_id, prompt, session_type="english")
 
     try:
         if isinstance(response, str):

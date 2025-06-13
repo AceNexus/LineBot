@@ -43,7 +43,7 @@ LUMOS_COMMANDS = ["路摸思", "lumos"]
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
-    user_id = event.source.user_id
+    chat_id = event.source.group_id if event.source.type == 'group' else event.source.user_id
 
     try:
         data = parse_qs(event.postback.data)
@@ -53,11 +53,11 @@ def handle_postback(event):
         english_difficulty = data.get('english_difficulty', [''])[0]
         english_count = data.get('english_count', [''])[0]
 
-        logger.info(f"Received postback from {user_id}: {action}")
+        logger.info(f"Received postback from {chat_id}: {action}")
 
         if action == 'toggle_ai':
-            toggle_ai_status(user_id)
-            response = get_ai_status_flex(user_id)
+            toggle_ai_status(chat_id)
+            response = get_ai_status_flex(chat_id)
         elif action == 'news':
             response = get_news_topic_menu()
         elif news_topic:
@@ -68,7 +68,7 @@ def handle_postback(event):
         elif action == 'movie':
             response = get_movies()
         elif action == 'japanese':
-            response = get_japanese_word(user_id)
+            response = get_japanese_word(chat_id)
         elif action == 'english':
             response = get_english_difficulty_menu()
         elif action == 'english_subscribe':
@@ -85,16 +85,16 @@ def handle_postback(event):
             difficulty_id, count, selected_times = handle_subscription_time(data)
             response = get_subscription_confirm(difficulty_id, count, selected_times)
         elif 'english_subscribe_save' in data:
-            response = handle_subscription_save(data, user_id)
+            response = handle_subscription_save(data, chat_id)
         elif action == 'english_subscribe_view':
-            response = handle_subscription_view(user_id)
+            response = handle_subscription_view(chat_id)
         elif action == 'english_subscribe_cancel':
-            response = handle_subscription_cancel(user_id)
+            response = handle_subscription_cancel(chat_id)
         elif english_difficulty:
             response = get_english_count_menu(english_difficulty)
         elif english_count:
             difficulty_id, count = english_count.split('/')
-            response = get_english_words(user_id, int(difficulty_id), int(count))
+            response = get_english_words(chat_id, int(difficulty_id), int(count))
         else:
             response = "這功能正在裝上輪子，還在趕來的路上"
 
@@ -108,19 +108,19 @@ def handle_postback(event):
 @handler.add(MessageEvent, message=TextMessage)
 def process_text_message(event):
     """處理文字訊息的主要入口點"""
-    user_id = event.source.user_id
+    chat_id = event.source.group_id if event.source.type == 'group' else event.source.user_id
     message_text = event.message.text
 
     try:
-        response = process_user_input(user_id, message_text)
+        response = process_user_input(chat_id, message_text)
         if response is not None:
             reply_to_user(event.reply_token, response)
     except Exception as e:
-        logger.error(f"處理文字訊息時發生錯誤 (用戶: {user_id}): {e}", exc_info=True)
+        logger.error(f"處理文字訊息時發生錯誤 (聊天室: {chat_id}): {e}", exc_info=True)
         reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")
 
 
-def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMessage, FlexSendMessage, List]:
+def process_user_input(chat_id: str, message_text: str) -> Union[str, TextSendMessage, FlexSendMessage, List]:
     msg = message_text.strip().lower()
 
     if msg in MENU_COMMANDS:
@@ -129,7 +129,7 @@ def process_user_input(user_id: str, message_text: str) -> Union[str, TextSendMe
     if msg in LUMOS_COMMANDS:
         return get_lumos()
 
-    return groq_service.chat_with_groq(user_id, message_text)
+    return groq_service.chat_with_groq(chat_id, message_text)
 
 
 def reply_to_user(reply_token: str, message: Union[str, TextSendMessage, FlexSendMessage, List]):

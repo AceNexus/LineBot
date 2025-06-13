@@ -11,7 +11,7 @@ from app.utils.theme import COLOR_THEME
 logger = logging.getLogger(__name__)
 
 
-def get_japanese_word(user_id: str):
+def get_japanese_word(chat_id: str):
     """
     使用 Groq AI 提供日文單字學習內容
     功能：獲取一個日常生活中常用的日文單字或表達方式，並提供完整的學習資訊
@@ -46,7 +46,7 @@ def get_japanese_word(user_id: str):
     """
 
     # 使用 'japanese' 會話類型，與一般聊天和英文學習分離
-    response = chat_with_groq(user_id, prompt, session_type="japanese")
+    response = chat_with_groq(chat_id, prompt, session_type="japanese")
 
     try:
         if isinstance(response, str):
