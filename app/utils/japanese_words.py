@@ -203,7 +203,7 @@ def create_japanese_flex_bubble(word_data):
                     uri=example_audio_url
                 ),
                 style="secondary",
-                color=COLOR_THEME['secondary']
+                color=COLOR_THEME['info']
             )
         ],
         background_color=COLOR_THEME['card']

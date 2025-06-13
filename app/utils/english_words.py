@@ -185,7 +185,8 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
         example_audio_url = ""
 
     # Header
-    header_text = TextComponent(text=f"📖 {difficulty_name}", weight="bold", color="#1f76e3", size="sm")
+    header_text = TextComponent(text=f"📖 {difficulty_name}", weight="bold", color=COLOR_THEME['text_primary'],
+                                size="sm")
     header_box = BoxComponent(layout="vertical", contents=[header_text], padding_bottom="md")
 
     # Body
@@ -199,19 +200,19 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
         TextComponent(
             text=f"🔊 {word_data.get('pronunciation', '')}",
             size="md",
-            color="#888888",
+            color=COLOR_THEME['info'],
             wrap=True
         ),
         TextComponent(
             text=f"💡 英文解釋: {word_data['definition_en']}",
             size="sm",
-            color="#555555",
+            color=COLOR_THEME['text_secondary'],
             wrap=True
         ),
         TextComponent(
             text=f"📘 中文解釋: {word_data['definition_zh']}",
             size="sm",
-            color="#555555",
+            color=COLOR_THEME['text_secondary'],
             wrap=True
         ),
         TextComponent(
@@ -224,13 +225,13 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
             text=f"● {word_data['example_sentence']}",
             wrap=True,
             size="sm",
-            color="#333333"
+            color=COLOR_THEME['text_primary']
         ),
         TextComponent(
             text=f"○ {word_data['example_translation']}",
             wrap=True,
             size="sm",
-            color="#666666"
+            color=COLOR_THEME['text_secondary']
         )
     ]
 
@@ -252,7 +253,7 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
                     uri=word_audio_url
                 ),
                 style="primary",
-                color="#00C300"
+                color=COLOR_THEME['primary']
             ),
             ButtonComponent(
                 action=URIAction(
@@ -260,7 +261,7 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
                     uri=example_audio_url
                 ),
                 style="secondary",
-                color="#1E90FF"
+                color=COLOR_THEME['info']
             )
         ],
         padding_top="sm"
