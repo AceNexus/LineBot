@@ -119,24 +119,55 @@ def fetch_google_news_flex(topic_name, topic_url, count):
                 short_url = shorten_url(full_url)
 
                 # 為每條新聞創建一個 bubble
-                header_text = TextComponent(text=topic_name, weight="bold", color=COLOR_THEME['primary'], size="sm")
-                header_box = BoxComponent(layout="vertical", contents=[header_text], padding_bottom="md")
+                header_text = TextComponent(
+                    text=topic_name,
+                    weight="bold",
+                    color=COLOR_THEME['text_primary'],
+                    size="sm"
+                )
+                header_box = BoxComponent(
+                    layout="vertical",
+                    contents=[header_text],
+                    background_color=COLOR_THEME['card']
+                )
 
-                body_text = TextComponent(text=title, weight="bold", wrap=True, size="md")
-                body_box = BoxComponent(layout="vertical", contents=[body_text], spacing="sm", padding_all="md")
+                body_text = TextComponent(
+                    text=title,
+                    weight="bold",
+                    wrap=True,
+                    size="md",
+                    color=COLOR_THEME['text_primary']
+                )
+                body_box = BoxComponent(
+                    layout="vertical",
+                    contents=[body_text],
+                    spacing="sm",
+                    padding_all="md",
+                    background_color=COLOR_THEME['card']
+                )
 
                 button = ButtonComponent(
                     action=URIAction(label="閱讀全文", uri=short_url),
                     style="primary",
-                    color=COLOR_THEME['primary']
+                    color=COLOR_THEME['primary'],
+                    margin="sm",
+                    height="sm"
                 )
-                footer_box = BoxComponent(layout="vertical", contents=[button], padding_top="sm")
+                footer_box = BoxComponent(
+                    layout="vertical",
+                    contents=[button],
+                    padding_all="lg",
+                    background_color=COLOR_THEME['card']
+                )
 
                 bubble = BubbleContainer(
                     header=header_box,
                     body=body_box,
                     footer=footer_box,
-                    size="kilo"
+                    styles=BubbleStyle(
+                        body=BlockStyle(background_color=COLOR_THEME['card']),
+                        footer=BlockStyle(background_color=COLOR_THEME['card'])
+                    )
                 )
                 bubbles.append(bubble)
 
@@ -192,7 +223,7 @@ def get_news_topic_menu():
         ],
         spacing="md",
         padding_all="lg",
-        background_color=COLOR_THEME['background']
+        background_color=COLOR_THEME['card']
     )
 
     buttons = []
@@ -215,15 +246,15 @@ def get_news_topic_menu():
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color=COLOR_THEME['background']
+        background_color=COLOR_THEME['card']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color=COLOR_THEME['background']),
-            footer=BlockStyle(background_color=COLOR_THEME['background'])
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
         )
     )
 
@@ -261,7 +292,7 @@ def get_news_count_menu(topic_id: str):
         ],
         spacing="md",
         padding_all="lg",
-        background_color=COLOR_THEME['background']
+        background_color=COLOR_THEME['card']
     )
 
     buttons = []
@@ -269,7 +300,7 @@ def get_news_count_menu(topic_id: str):
         buttons.append(
             ButtonComponent(
                 action=PostbackAction(
-                    label=f"{count} 則",
+                    label=f"📰 {count} 則新聞",
                     data=f"news_count={topic_id}/{count}"
                 ),
                 style="primary",
@@ -284,15 +315,15 @@ def get_news_count_menu(topic_id: str):
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color=COLOR_THEME['background']
+        background_color=COLOR_THEME['card']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color=COLOR_THEME['background']),
-            footer=BlockStyle(background_color=COLOR_THEME['background'])
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
         )
     )
 

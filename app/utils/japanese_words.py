@@ -195,7 +195,9 @@ def create_japanese_flex_bubble(word_data):
                     uri=word_audio_url
                 ),
                 style="primary",
-                color=COLOR_THEME['primary']
+                color=COLOR_THEME['primary'],
+                margin="sm",
+                height="sm"
             ),
             ButtonComponent(
                 action=URIAction(
@@ -203,10 +205,13 @@ def create_japanese_flex_bubble(word_data):
                     uri=example_audio_url
                 ),
                 style="secondary",
-                color=COLOR_THEME['info']
+                color=COLOR_THEME['info'],
+                margin="sm",
+                height="sm"
             )
         ],
-        background_color=COLOR_THEME['card']
+        background_color=COLOR_THEME['card'],
+        padding_all="lg"
     )
 
     # 建立 BubbleContainer

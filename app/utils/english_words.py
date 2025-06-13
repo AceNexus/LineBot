@@ -185,9 +185,13 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
         example_audio_url = ""
 
     # Header
-    header_text = TextComponent(text=f"📖 {difficulty_name}", weight="bold", color=COLOR_THEME['text_primary'],
-                                size="sm")
-    header_box = BoxComponent(layout="vertical", contents=[header_text], padding_bottom="md")
+    header_box = BoxComponent(
+        layout="vertical",
+        contents=[
+            TextComponent(text=f"📖 {difficulty_name}", weight="bold", size="lg", color=COLOR_THEME['text_primary'])
+        ],
+        background_color=COLOR_THEME['card']
+    )
 
     # Body
     body_contents = [
@@ -195,6 +199,7 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
             text=f"📚 {word_data['word']} ({word_data['part_of_speech']})",
             weight="bold",
             size="xl",
+            color=COLOR_THEME['text_primary'],
             wrap=True
         ),
         TextComponent(
@@ -219,6 +224,7 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
             text="✏️ 例句:",
             weight="bold",
             size="sm",
+            color=COLOR_THEME['text_primary'],
             wrap=True
         ),
         TextComponent(
@@ -239,7 +245,7 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
         layout="vertical",
         spacing="md",
         contents=body_contents,
-        padding_all="md"
+        background_color=COLOR_THEME['card']
     )
 
     # Footer
@@ -253,7 +259,9 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
                     uri=word_audio_url
                 ),
                 style="primary",
-                color=COLOR_THEME['primary']
+                color=COLOR_THEME['primary'],
+                height="sm",
+                margin="sm"
             ),
             ButtonComponent(
                 action=URIAction(
@@ -261,10 +269,13 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
                     uri=example_audio_url
                 ),
                 style="secondary",
-                color=COLOR_THEME['info']
+                color=COLOR_THEME['info'],
+                height="sm",
+                margin="sm"
             )
         ],
-        padding_top="sm"
+        background_color=COLOR_THEME['card'],
+        padding_all="lg"
     )
 
     # 建立 BubbleContainer
@@ -272,7 +283,10 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
         header=header_box,
         body=body_box,
         footer=footer_box,
-        size="kilo"
+        styles=BubbleStyle(
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
+        )
     )
 
     return bubble
@@ -307,7 +321,7 @@ def get_english_difficulty_menu() -> FlexSendMessage:
         ],
         spacing="md",
         padding_all="lg",
-        background_color=COLOR_THEME['primary']
+        background_color=COLOR_THEME['card']
     )
 
     buttons = []
@@ -318,7 +332,7 @@ def get_english_difficulty_menu() -> FlexSendMessage:
                 data=f"english_difficulty={key}"
             ),
             style="primary",
-            color=COLOR_THEME['error'],
+            color=COLOR_THEME['primary'],
             margin="sm",
             height="sm"
         )
@@ -329,15 +343,15 @@ def get_english_difficulty_menu() -> FlexSendMessage:
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color=COLOR_THEME['primary']
+        background_color=COLOR_THEME['card']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color=COLOR_THEME['primary']),
-            footer=BlockStyle(background_color=COLOR_THEME['primary'])
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
         )
     )
 
@@ -375,7 +389,7 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
         ],
         spacing="md",
         padding_all="lg",
-        background_color=COLOR_THEME['primary']
+        background_color=COLOR_THEME['card']
     )
 
     buttons = []
@@ -386,7 +400,7 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
                 data=f"english_count={difficulty_id}/{count}"
             ),
             style="primary",
-            color=COLOR_THEME['error'],
+            color=COLOR_THEME['primary'],
             margin="sm",
             height="sm"
         )
@@ -397,15 +411,15 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color=COLOR_THEME['primary']
+        background_color=COLOR_THEME['card']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color=COLOR_THEME['primary']),
-            footer=BlockStyle(background_color=COLOR_THEME['primary'])
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
         )
     )
 

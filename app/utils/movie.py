@@ -230,14 +230,22 @@ def create_bubble(movie: Dict) -> Optional[BubbleContainer]:
         if movie.get('trailer'):
             buttons.append(ButtonComponent(
                 action=URIAction(label="官方預告", uri=movie['trailer']),
-                style="primary", color=COLOR_THEME['primary'], flex=1
+                style="primary",
+                color=COLOR_THEME['primary'],
+                margin="sm",
+                height="sm",
+                flex=1
             ))
 
         # YouTube搜尋連結
         youtube_url = create_youtube_link(movie.get('title', ''))
         buttons.append(ButtonComponent(
             action=URIAction(label="YouTube預告", uri=youtube_url),
-            style="secondary", color=COLOR_THEME['success'], flex=1
+            style="secondary",
+            color=COLOR_THEME['info'],
+            margin="sm",
+            height="sm",
+            flex=1
         ))
 
         footer = None
@@ -245,7 +253,7 @@ def create_bubble(movie: Dict) -> Optional[BubbleContainer]:
             footer = BoxComponent(
                 layout="vertical",
                 contents=[BoxComponent(layout="horizontal", contents=buttons, spacing="sm")],
-                paddingAll="20px"
+                padding_all="lg"
             )
 
         return BubbleContainer(
