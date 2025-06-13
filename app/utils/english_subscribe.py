@@ -347,10 +347,10 @@ def handle_subscription_view(user_id: str) -> FlexSendMessage:
             layout="vertical",
             contents=contents,
             padding_all="lg",
-            background_color=COLOR_THEME['primary']
+            background_color=COLOR_THEME['card']
         ),
         styles=BubbleStyle(
-            body=BlockStyle(background_color=COLOR_THEME['primary'])
+            body=BlockStyle(background_color=COLOR_THEME['card'])
         )
     )
 
@@ -520,7 +520,7 @@ def create_menu_bubble(title: str, subtitle: str, buttons: List[ButtonComponent]
         ],
         spacing="md",
         padding_all="lg",
-        background_color=COLOR_THEME['primary']
+        background_color=COLOR_THEME['card']
     )
 
     footer_box = BoxComponent(
@@ -528,15 +528,15 @@ def create_menu_bubble(title: str, subtitle: str, buttons: List[ButtonComponent]
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color=COLOR_THEME['primary']
+        background_color=COLOR_THEME['card']
     )
 
     return BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color=COLOR_THEME['primary']),
-            footer=BlockStyle(background_color=COLOR_THEME['primary'])
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
         )
     )
 
@@ -550,7 +550,7 @@ def get_subscription_menu() -> FlexSendMessage:
                 data="action=english_subscribe_setup"
             ),
             style="primary",
-            color=COLOR_THEME['error'],
+            color=COLOR_THEME['primary'],
             margin="sm",
             height="sm"
         ),
@@ -560,7 +560,7 @@ def get_subscription_menu() -> FlexSendMessage:
                 data="action=english_subscribe_view"
             ),
             style="primary",
-            color=COLOR_THEME['error'],
+            color=COLOR_THEME['info'],
             margin="sm",
             height="sm"
         ),
@@ -590,7 +590,7 @@ def get_difficulty_menu() -> FlexSendMessage:
                 data=f"english_subscribe_difficulty={level_id}"
             ),
             style="primary",
-            color="#FFB366",
+            color=COLOR_THEME['primary'],
             margin="sm",
             height="sm"
         )
@@ -612,7 +612,7 @@ def get_count_menu(difficulty_id: str) -> FlexSendMessage:
                 data=f"english_subscribe_count={difficulty_id}/{count}"
             ),
             style="primary",
-            color="#FFB366",
+            color=COLOR_THEME['primary'],
             margin="sm",
             height="sm"
         )
@@ -632,7 +632,7 @@ def get_time_menu(difficulty_id: str, count: int) -> FlexSendMessage:
                 data=f"english_subscribe_time={difficulty_id}/{count}/{time_id}"
             ),
             style="primary",
-            color="#FFB366",
+            color=COLOR_THEME['primary'],
             margin="sm",
             height="sm"
         )
@@ -719,7 +719,7 @@ def get_subscription_confirm(difficulty_id: str, count: int, selected_time: str)
         ],
         spacing="md",
         padding_all="lg",
-        background_color=COLOR_THEME['primary']
+        background_color=COLOR_THEME['card']
     )
 
     confirm_button = ButtonComponent(
@@ -738,15 +738,15 @@ def get_subscription_confirm(difficulty_id: str, count: int, selected_time: str)
         contents=[confirm_button],
         spacing="sm",
         padding_all="lg",
-        background_color=COLOR_THEME['primary']
+        background_color=COLOR_THEME['card']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color=COLOR_THEME['primary']),
-            footer=BlockStyle(background_color=COLOR_THEME['primary'])
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
         )
     )
 
