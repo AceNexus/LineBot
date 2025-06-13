@@ -9,6 +9,7 @@ from linebot.models import (
 
 from app.services.groq_service import chat_with_groq
 from app.utils.google_tts import generate_audio_url
+from app.utils.theme import COLOR_THEME
 
 logger = logging.getLogger(__name__)
 
@@ -283,14 +284,14 @@ def get_english_difficulty_menu() -> FlexSendMessage:
         weight="bold",
         size="xl",
         align="center",
-        color="#FFFFFF",
+        color=COLOR_THEME['text_primary'],
         wrap=True
     )
 
     subtitle = TextComponent(
         text="請選擇單字難度等級",
         size="sm",
-        color="#E0E0E0",
+        color=COLOR_THEME['text_secondary'],
         align="center",
         wrap=True,
         margin="sm"
@@ -301,11 +302,11 @@ def get_english_difficulty_menu() -> FlexSendMessage:
         contents=[
             title,
             subtitle,
-            SeparatorComponent(margin="lg", color="#666666")
+            SeparatorComponent(margin="lg", color=COLOR_THEME['separator'])
         ],
         spacing="md",
         padding_all="lg",
-        background_color="#404040"
+        background_color=COLOR_THEME['primary']
     )
 
     buttons = []
@@ -316,7 +317,7 @@ def get_english_difficulty_menu() -> FlexSendMessage:
                 data=f"english_difficulty={key}"
             ),
             style="primary",
-            color="#A6D6A6",
+            color=COLOR_THEME['error'],
             margin="sm",
             height="sm"
         )
@@ -327,15 +328,15 @@ def get_english_difficulty_menu() -> FlexSendMessage:
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color="#404040"
+        background_color=COLOR_THEME['primary']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color="#404040"),
-            footer=BlockStyle(background_color="#404040")
+            body=BlockStyle(background_color=COLOR_THEME['primary']),
+            footer=BlockStyle(background_color=COLOR_THEME['primary'])
         )
     )
 
@@ -351,14 +352,14 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
         weight="bold",
         size="xl",
         align="center",
-        color="#FFFFFF",
+        color=COLOR_THEME['text_primary'],
         wrap=True
     )
 
     subtitle = TextComponent(
         text="請選擇要學習的單字數量",
         size="sm",
-        color="#E0E0E0",
+        color=COLOR_THEME['text_secondary'],
         align="center",
         wrap=True,
         margin="sm"
@@ -369,11 +370,11 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
         contents=[
             title,
             subtitle,
-            SeparatorComponent(margin="lg", color="#666666")
+            SeparatorComponent(margin="lg", color=COLOR_THEME['separator'])
         ],
         spacing="md",
         padding_all="lg",
-        background_color="#404040"
+        background_color=COLOR_THEME['primary']
     )
 
     buttons = []
@@ -384,7 +385,7 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
                 data=f"english_count={difficulty_id}/{count}"
             ),
             style="primary",
-            color="#A6D6A6",
+            color=COLOR_THEME['error'],
             margin="sm",
             height="sm"
         )
@@ -395,15 +396,15 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
         contents=buttons,
         spacing="sm",
         padding_all="lg",
-        background_color="#404040"
+        background_color=COLOR_THEME['primary']
     )
 
     bubble = BubbleContainer(
         body=body_box,
         footer=footer_box,
         styles=BubbleStyle(
-            body=BlockStyle(background_color="#404040"),
-            footer=BlockStyle(background_color="#404040")
+            body=BlockStyle(background_color=COLOR_THEME['primary']),
+            footer=BlockStyle(background_color=COLOR_THEME['primary'])
         )
     )
 
