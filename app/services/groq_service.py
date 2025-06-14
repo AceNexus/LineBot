@@ -106,10 +106,10 @@ def chat_with_groq(chat_id: str, message: str, model: str = "llama-3.3-70b-versa
     :param message: 使用者輸入訊息
     :param model: 使用的模型名稱，預設為 llama-3.3-70b-versatile
     :param session_type: 會話類型 ('chat', 'english', 'japanese')，預設為 'chat'
-    :return: 模型回應的內容，如果 AI 功能關閉則返回 None
+    :return: 模型回應的內容，如果是一般聊天且 AI 功能關閉則返回 None
     """
-    # 檢查 AI 回應狀態
-    if not get_ai_status(chat_id):
+    # 只在一般聊天時檢查 AI 回應狀態
+    if session_type == 'chat' and not get_ai_status(chat_id):
         return None
 
     # 初始化使用者對話紀錄，使用對應的系統提示詞
