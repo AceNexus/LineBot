@@ -10,7 +10,8 @@ COLOR_THEME = {
     'neutral': '#9CA3AF',  # 中性灰：不可點擊狀態
 
     # 文字顏色
-    'text_primary': '#F3F4F6',  # 主要文字（深色背景上）
+    'text_primary': '#F3F4F6',  # 深色背景上
+    'text_on_light': '#1F2937',  # 淺色背景上
     'text_secondary': '#D1D5DB',  # 次要文字：說明、標籤
     'text_hint': '#9CA3AF',  # 提示文字：佔位提示
 

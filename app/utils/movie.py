@@ -203,7 +203,7 @@ def create_bubble(movie: Dict) -> Optional[BubbleContainer]:
             contents.append(TextComponent(
                 text=movie['eng_title'],
                 size="sm",
-                color=COLOR_THEME['text_secondary'],
+                color=COLOR_THEME['text_on_light'],
                 wrap=True,
                 margin="xs"
             ))
@@ -222,7 +222,7 @@ def create_bubble(movie: Dict) -> Optional[BubbleContainer]:
         for info, icon in [(movie.get('duration'), '⏱️'), (movie.get('genre'), '🎬'), (movie.get('release'), '📅')]:
             if info:
                 contents.append(
-                    TextComponent(text=f"{icon} {info}", size="sm", color=COLOR_THEME['text_secondary'], wrap=True,
+                    TextComponent(text=f"{icon} {info}", size="sm", color=COLOR_THEME['text_on_light'], wrap=True,
                                   margin="xs"))
 
         # 按鈕
