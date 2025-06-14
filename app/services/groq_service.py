@@ -148,10 +148,16 @@ def chat_with_groq(chat_id: str, message: str, model: str = "llama-3.3-70b-versa
 
         except Exception as e:
             error_msg = str(e).lower()
-            logger.error(f"An exception occurred with model {current_model}: {error_msg}")
+            logger.error(f"An exception occurred with model {current_model} for chat_id {chat_id}: {error_msg}")
+            # 如果是最後一個模型也失敗了，清理該聊天室的會話記錄
+            if current_model == models_to_try[-1]:
+                logger.warning(f"Clearing session for chat_id {chat_id} due to repeated failures")
+                if chat_id in user_sessions[session_type]:
+                    del user_sessions[session_type][chat_id]
             continue
 
     if reply is None:
+        logger.error(f"All models failed for chat_id {chat_id}, session_type {session_type}")
         reply = "很抱歉，我現在暫時無法處理您的請求。請稍後再試。"
 
     # 加入機器人回應到對話紀錄
