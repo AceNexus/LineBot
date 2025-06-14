@@ -359,7 +359,7 @@ def get_english_difficulty_menu() -> FlexSendMessage:
 
 
 def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
-    """生成英文單字數量選單"""
+    """生成英文單字數量選單 - 6 宮格佈局"""
     difficulty_name = DIFFICULTY_NAMES.get(difficulty_id, "英文單字")
 
     title = TextComponent(
@@ -392,23 +392,33 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
         background_color=COLOR_THEME['card']
     )
 
-    buttons = []
-    for count in range(1, 6):
-        button = ButtonComponent(
-            action=PostbackAction(
-                label=f"{count} 個單字",
-                data=f"english_count={difficulty_id}/{count}"
-            ),
-            style="primary",
-            color=COLOR_THEME['primary'],
-            margin="sm",
-            height="sm"
-        )
-        buttons.append(button)
+    # 6 宮格按鈕（2 行 × 3 列）
+    grid_rows = []
+    for row in range(2):  # 2 行
+        row_buttons = []
+        for col in range(3):  # 每行 3 顆
+            count = row * 3 + col + 1
+            button = ButtonComponent(
+                action=PostbackAction(
+                    label=f"{count}",
+                    data=f"english_count={difficulty_id}/{count}"
+                ),
+                style="primary",
+                color=COLOR_THEME['primary'] if count % 2 == 1 else COLOR_THEME['info'],
+                flex=1,
+                height="sm"
+            )
+            row_buttons.append(button)
+
+        grid_rows.append(BoxComponent(
+            layout="horizontal",
+            contents=row_buttons,
+            spacing="xs"
+        ))
 
     footer_box = BoxComponent(
         layout="vertical",
-        contents=buttons,
+        contents=grid_rows,
         spacing="sm",
         padding_all="lg",
         background_color=COLOR_THEME['card']
@@ -423,4 +433,7 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
         )
     )
 
-    return FlexSendMessage(alt_text="英文單字數量選單", contents=bubble)
+    return FlexSendMessage(
+        alt_text=f"{difficulty_name} 單字數量選單",
+        contents=bubble
+    )

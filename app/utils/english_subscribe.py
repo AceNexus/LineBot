@@ -292,7 +292,7 @@ def handle_subscription_view(user_id: str) -> FlexSendMessage:
     # 建立訂閱列表內容
     contents = [
         TextComponent(
-            text= "您的訂閱設定",
+            text="您的訂閱設定",
             weight="bold",
             size="xl",
             color=COLOR_THEME['text_primary'],
@@ -601,38 +601,88 @@ def get_difficulty_menu() -> FlexSendMessage:
 
 
 def get_count_menu(difficulty_id: str) -> FlexSendMessage:
-    """生成訂閱數量選單"""
+    """生成訂閱數量選單（6 宮格佈局）"""
     difficulty_name = DIFFICULTY_NAMES.get(difficulty_id, "英文單字")
 
-    buttons = []
-    for count in range(1, 6):
-        button = ButtonComponent(
-            action=PostbackAction(
-                label=f"{count} 個單字",
-                data=f"english_subscribe_count={difficulty_id}/{count}"
-            ),
-            style="primary",
-            color=COLOR_THEME['primary'],
-            margin="sm",
-            height="sm"
-        )
-        buttons.append(button)
+    grid_rows = []
+    for row in range(2):  # 2 行
+        row_buttons = []
+        for col in range(3):  # 每行 3 顆
+            count = row * 3 + col + 1
+            button = ButtonComponent(
+                action=PostbackAction(
+                    label=f"{count}",
+                    data=f"english_subscribe_count={difficulty_id}/{count}"
+                ),
+                style="primary",
+                color=COLOR_THEME['primary'] if count % 2 == 1 else COLOR_THEME['info'],
+                flex=1,
+                height="sm"
+            )
+            row_buttons.append(button)
 
-    bubble = create_menu_bubble(f"{difficulty_name}", "請選擇每次發送的單字數量", buttons)
-    return FlexSendMessage(alt_text="訂閱數量選單", contents=bubble)
+        grid_rows.append(BoxComponent(
+            layout="horizontal",
+            contents=row_buttons,
+            spacing="xs"
+        ))
+
+    bubble = BubbleContainer(
+        body=BoxComponent(
+            layout="vertical",
+            contents=[
+                TextComponent(
+                    text=f"{difficulty_name}",
+                    weight="bold",
+                    size="xl",
+                    align="center",
+                    color=COLOR_THEME['text_primary'],
+                    wrap=True
+                ),
+                TextComponent(
+                    text="請選擇每次發送的單字數量",
+                    size="sm",
+                    color=COLOR_THEME['text_secondary'],
+                    align="center",
+                    wrap=True,
+                    margin="sm"
+                ),
+                SeparatorComponent(margin="lg", color=COLOR_THEME['separator'])
+            ],
+            spacing="md",
+            padding_all="lg",
+            background_color=COLOR_THEME['card']
+        ),
+        footer=BoxComponent(
+            layout="vertical",
+            contents=grid_rows,
+            spacing="sm",
+            padding_all="lg",
+            background_color=COLOR_THEME['card']
+        ),
+        styles=BubbleStyle(
+            body=BlockStyle(background_color=COLOR_THEME['card']),
+            footer=BlockStyle(background_color=COLOR_THEME['card'])
+        )
+    )
+
+    return FlexSendMessage(
+        alt_text="訂閱數量選單",
+        contents=bubble
+    )
 
 
 def get_time_menu(difficulty_id: str, count: int) -> FlexSendMessage:
     """生成訂閱時間選單"""
     buttons = []
-    for time_id, time_name in SUBSCRIPTION_TIMES.items():
+    for i, (time_id, time_name) in enumerate(SUBSCRIPTION_TIMES.items()):
         button = ButtonComponent(
             action=PostbackAction(
                 label=f"{time_name}",
                 data=f"english_subscribe_time={difficulty_id}/{count}/{time_id}"
             ),
             style="primary",
-            color=COLOR_THEME['primary'],
+            color=COLOR_THEME['primary'] if i % 2 == 0 else COLOR_THEME['info'],
             margin="sm",
             height="sm"
         )
@@ -693,7 +743,6 @@ def get_subscription_confirm(difficulty_id: str, count: int, selected_time: str)
             ]
         )
     ]
-
 
     body_box = BoxComponent(
         layout="vertical",

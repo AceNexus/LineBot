@@ -218,7 +218,7 @@ def get_news_topic_menu():
 
 
 def get_news_count_menu(topic_id: str):
-    """生成新聞數量選單"""
+    """生成新聞數量選單 - 九宮格佈局"""
     topic_name = TOPIC_NAMES.get(topic_id, '新聞')
 
     title = TextComponent(
@@ -241,34 +241,39 @@ def get_news_count_menu(topic_id: str):
 
     body_box = BoxComponent(
         layout="vertical",
-        contents=[
-            title,
-            subtitle,
-            SeparatorComponent(margin="lg", color=COLOR_THEME['separator'])
-        ],
+        contents=[title, subtitle, SeparatorComponent(margin="lg", color=COLOR_THEME['separator'])],
         spacing="md",
         padding_all="lg",
         background_color=COLOR_THEME['card']
     )
 
-    buttons = []
-    for count in range(1, 11):
-        buttons.append(
-            ButtonComponent(
-                action=PostbackAction(
-                    label=f"{count} 則新聞",
-                    data=f"news_count={topic_id}/{count}"
-                ),
-                style="primary",
-                color=COLOR_THEME['primary'] if count % 2 == 1 else COLOR_THEME['info'],
-                margin="sm",
-                height="sm"
+    # 九宮格按鈕（1～9）
+    grid_rows = []
+    for row in range(3):  # 3 行
+        row_buttons = []
+        for col in range(3):  # 每行 3 顆
+            count = row * 3 + col + 1
+            row_buttons.append(
+                ButtonComponent(
+                    action=PostbackAction(
+                        label=str(count),
+                        data=f"news_count={topic_id}/{count}"
+                    ),
+                    style="primary",
+                    color=COLOR_THEME['primary'] if count % 2 == 1 else COLOR_THEME['info'],
+                    flex=1,
+                    height="sm"
+                )
             )
-        )
+        grid_rows.append(BoxComponent(
+            layout="horizontal",
+            contents=row_buttons,
+            spacing="xs"
+        ))
 
     footer_box = BoxComponent(
         layout="vertical",
-        contents=buttons,
+        contents=grid_rows,
         spacing="sm",
         padding_all="lg",
         background_color=COLOR_THEME['card']
@@ -283,4 +288,7 @@ def get_news_count_menu(topic_id: str):
         )
     )
 
-    return FlexSendMessage(alt_text="新聞數量選單", contents=bubble)
+    return FlexSendMessage(
+        alt_text=f"{topic_name}新聞數量選單",
+        contents=bubble
+    )
