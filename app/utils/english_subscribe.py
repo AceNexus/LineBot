@@ -173,10 +173,10 @@ def handle_subscription_save(data: Dict, user_id: str) -> FlexSendMessage:
                         )
                     ],
                     padding_all="lg",
-                    background_color=COLOR_THEME['primary']
+                    background_color=COLOR_THEME['card']
                 ),
                 styles=BubbleStyle(
-                    body=BlockStyle(background_color=COLOR_THEME['primary'])
+                    body=BlockStyle(background_color=COLOR_THEME['card'])
                 )
             )
             return FlexSendMessage(alt_text="訂閱成功", contents=success_bubble)
@@ -187,7 +187,7 @@ def handle_subscription_save(data: Dict, user_id: str) -> FlexSendMessage:
                     layout="vertical",
                     contents=[
                         TextComponent(
-                            text="❌ 訂閱失敗",
+                            text="訂閱失敗",
                             weight="bold",
                             size="xl",
                             color=COLOR_THEME['text_primary'],
@@ -207,7 +207,7 @@ def handle_subscription_save(data: Dict, user_id: str) -> FlexSendMessage:
                     background_color=COLOR_THEME['error']
                 ),
                 styles=BubbleStyle(
-                    body=BlockStyle(background_color=COLOR_THEME['error'])
+                    body=BlockStyle(background_color=COLOR_THEME['card'])
                 )
             )
             return FlexSendMessage(alt_text="訂閱失敗", contents=error_bubble)
@@ -237,10 +237,10 @@ def handle_subscription_save(data: Dict, user_id: str) -> FlexSendMessage:
                     )
                 ],
                 padding_all="lg",
-                background_color=COLOR_THEME['warning']
+                background_color=COLOR_THEME['card']
             ),
             styles=BubbleStyle(
-                body=BlockStyle(background_color=COLOR_THEME['warning'])
+                body=BlockStyle(background_color=COLOR_THEME['card'])
             )
         )
         return FlexSendMessage(alt_text="系統錯誤", contents=error_bubble)
@@ -257,7 +257,7 @@ def handle_subscription_view(user_id: str) -> FlexSendMessage:
                 layout="vertical",
                 contents=[
                     TextComponent(
-                        text="📋 訂閱查詢",
+                        text="訂閱查詢",
                         weight="bold",
                         size="xl",
                         color=COLOR_THEME['text_primary'],
@@ -265,7 +265,7 @@ def handle_subscription_view(user_id: str) -> FlexSendMessage:
                     ),
                     SeparatorComponent(margin="lg", color=COLOR_THEME['separator']),
                     TextComponent(
-                        text="❗ 您目前沒有任何訂閱",
+                        text="您目前沒有任何訂閱",
                         size="lg",
                         color=COLOR_THEME['text_secondary'],
                         align="center",
@@ -281,10 +281,10 @@ def handle_subscription_view(user_id: str) -> FlexSendMessage:
                     )
                 ],
                 padding_all="lg",
-                background_color=COLOR_THEME['neutral']
+                background_color=COLOR_THEME['card']
             ),
             styles=BubbleStyle(
-                body=BlockStyle(background_color=COLOR_THEME['neutral'])
+                body=BlockStyle(background_color=COLOR_THEME['card'])
             )
         )
         return FlexSendMessage(alt_text="訂閱查詢", contents=no_subscription_bubble)
@@ -292,7 +292,7 @@ def handle_subscription_view(user_id: str) -> FlexSendMessage:
     # 建立訂閱列表內容
     contents = [
         TextComponent(
-            text="📋 您的訂閱設定",
+            text= "您的訂閱設定",
             weight="bold",
             size="xl",
             color=COLOR_THEME['text_primary'],
@@ -385,7 +385,7 @@ def handle_subscription_cancel(user_id: str) -> FlexSendMessage:
                     ),
                     SeparatorComponent(margin="lg", color=COLOR_THEME['separator']),
                     TextComponent(
-                        text="❗ 您目前沒有任何訂閱",
+                        text="您目前沒有任何訂閱",
                         size="lg",
                         color=COLOR_THEME['text_secondary'],
                         align="center",
@@ -424,7 +424,7 @@ def handle_subscription_cancel(user_id: str) -> FlexSendMessage:
                     ),
                     SeparatorComponent(margin="lg", color=COLOR_THEME['separator']),
                     TextComponent(
-                        text="✅ 已成功取消所有訂閱！",
+                        text="已成功取消所有訂閱！",
                         size="lg",
                         color=COLOR_THEME['text_secondary'],
                         align="center",
@@ -436,7 +436,7 @@ def handle_subscription_cancel(user_id: str) -> FlexSendMessage:
                         spacing="sm",
                         contents=[
                             TextComponent(
-                                text="📚 所有英文單字推送已停止",
+                                text="所有英文單字推送已停止",
                                 size="sm",
                                 color=COLOR_THEME['text_hint'],
                                 align="center"
@@ -451,7 +451,7 @@ def handle_subscription_cancel(user_id: str) -> FlexSendMessage:
                     )
                 ],
                 padding_all="lg",
-                background_color=COLOR_THEME['success']
+                background_color=COLOR_THEME['card']
             ),
             styles=BubbleStyle(
                 body=BlockStyle(background_color=COLOR_THEME['success'])
@@ -546,7 +546,7 @@ def get_subscription_menu() -> FlexSendMessage:
     buttons = [
         ButtonComponent(
             action=PostbackAction(
-                label="📖 設定訂閱",
+                label="設定訂閱",
                 data="action=english_subscribe_setup"
             ),
             style="primary",
@@ -556,7 +556,7 @@ def get_subscription_menu() -> FlexSendMessage:
         ),
         ButtonComponent(
             action=PostbackAction(
-                label="📋 查閱訂閱",
+                label="查閱訂閱",
                 data="action=english_subscribe_view"
             ),
             style="primary",
@@ -566,7 +566,7 @@ def get_subscription_menu() -> FlexSendMessage:
         ),
         ButtonComponent(
             action=PostbackAction(
-                label="❌ 取消訂閱",
+                label="取消訂閱",
                 data="action=english_subscribe_cancel"
             ),
             style="secondary",
@@ -576,7 +576,7 @@ def get_subscription_menu() -> FlexSendMessage:
         )
     ]
 
-    bubble = create_menu_bubble("📚 英文單字訂閱", "請選擇訂閱選項", buttons)
+    bubble = create_menu_bubble("英文單字訂閱", "請選擇訂閱選項", buttons)
     return FlexSendMessage(alt_text="英文訂閱選單", contents=bubble)
 
 
@@ -586,7 +586,7 @@ def get_difficulty_menu() -> FlexSendMessage:
     for level_id, level_name in DIFFICULTY_NAMES.items():
         button = ButtonComponent(
             action=PostbackAction(
-                label=f"📖 {level_name}",
+                label=f"{level_name}",
                 data=f"english_subscribe_difficulty={level_id}"
             ),
             style="primary",
@@ -596,7 +596,7 @@ def get_difficulty_menu() -> FlexSendMessage:
         )
         buttons.append(button)
 
-    bubble = create_menu_bubble("📚 選擇單字難度", "請選擇訂閱的單字難度等級", buttons)
+    bubble = create_menu_bubble("選擇單字難度", "請選擇訂閱的單字難度等級", buttons)
     return FlexSendMessage(alt_text="訂閱難度選單", contents=bubble)
 
 
@@ -608,7 +608,7 @@ def get_count_menu(difficulty_id: str) -> FlexSendMessage:
     for count in range(1, 6):
         button = ButtonComponent(
             action=PostbackAction(
-                label=f"📖 {count} 個單字",
+                label=f"{count} 個單字",
                 data=f"english_subscribe_count={difficulty_id}/{count}"
             ),
             style="primary",
@@ -618,7 +618,7 @@ def get_count_menu(difficulty_id: str) -> FlexSendMessage:
         )
         buttons.append(button)
 
-    bubble = create_menu_bubble(f"📚 {difficulty_name}", "請選擇每次發送的單字數量", buttons)
+    bubble = create_menu_bubble(f"{difficulty_name}", "請選擇每次發送的單字數量", buttons)
     return FlexSendMessage(alt_text="訂閱數量選單", contents=bubble)
 
 
@@ -628,7 +628,7 @@ def get_time_menu(difficulty_id: str, count: int) -> FlexSendMessage:
     for time_id, time_name in SUBSCRIPTION_TIMES.items():
         button = ButtonComponent(
             action=PostbackAction(
-                label=f"⏰ {time_name}",
+                label=f"{time_name}",
                 data=f"english_subscribe_time={difficulty_id}/{count}/{time_id}"
             ),
             style="primary",
@@ -638,7 +638,7 @@ def get_time_menu(difficulty_id: str, count: int) -> FlexSendMessage:
         )
         buttons.append(button)
 
-    bubble = create_menu_bubble("⏰ 選擇訂閱時間", "請選擇接收單字的時間", buttons)
+    bubble = create_menu_bubble("選擇訂閱時間", "請選擇接收單字的時間", buttons)
     return FlexSendMessage(alt_text="訂閱時間選單", contents=bubble)
 
 
@@ -648,7 +648,7 @@ def get_subscription_confirm(difficulty_id: str, count: int, selected_time: str)
     time_name = SUBSCRIPTION_TIMES.get(selected_time, "未知時段")
 
     title = TextComponent(
-        text="📚 確認訂閱",
+        text="確認訂閱",
         weight="bold",
         size="xl",
         align="center",
@@ -694,13 +694,6 @@ def get_subscription_confirm(difficulty_id: str, count: int, selected_time: str)
         )
     ]
 
-    confirm_text = TextComponent(
-        text="確認要訂閱嗎？",
-        size="md",
-        color=COLOR_THEME['text_secondary'],
-        align="center",
-        margin="lg"
-    )
 
     body_box = BoxComponent(
         layout="vertical",
@@ -715,7 +708,6 @@ def get_subscription_confirm(difficulty_id: str, count: int, selected_time: str)
                 contents=detail_contents
             ),
             SeparatorComponent(margin="lg", color=COLOR_THEME['separator']),
-            confirm_text
         ],
         spacing="md",
         padding_all="lg",
@@ -724,7 +716,7 @@ def get_subscription_confirm(difficulty_id: str, count: int, selected_time: str)
 
     confirm_button = ButtonComponent(
         action=PostbackAction(
-            label="✅ 確認訂閱",
+            label="確認",
             data=f"english_subscribe_save={difficulty_id}/{count}/{selected_time}"
         ),
         style="primary",

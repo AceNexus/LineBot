@@ -8,7 +8,7 @@ from app.utils.theme import COLOR_THEME
 
 def get_lumos():
     title = TextComponent(
-        text="✨ 技術資源分享 ✨",
+        text="技術資源分享",
         weight="bold",
         size="xl",
         align="center",

@@ -188,7 +188,7 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
     header_box = BoxComponent(
         layout="vertical",
         contents=[
-            TextComponent(text=f"📖 {difficulty_name}", weight="bold", size="lg", color=COLOR_THEME['text_primary'])
+            TextComponent(text=f"{difficulty_name}", weight="bold", size="lg", color=COLOR_THEME['text_primary'])
         ],
         background_color=COLOR_THEME['card']
     )
@@ -196,7 +196,7 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
     # Body
     body_contents = [
         TextComponent(
-            text=f"📚 {word_data['word']} ({word_data['part_of_speech']})",
+            text=f"{word_data['word']} ({word_data['part_of_speech']})",
             weight="bold",
             size="xl",
             color=COLOR_THEME['text_primary'],
@@ -295,7 +295,7 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
 def get_english_difficulty_menu() -> FlexSendMessage:
     """生成英文單字難度選單"""
     title = TextComponent(
-        text="📚 英文單字學習",
+        text="英文單字學習",
         weight="bold",
         size="xl",
         align="center",
@@ -328,7 +328,7 @@ def get_english_difficulty_menu() -> FlexSendMessage:
     for key, name in DIFFICULTY_NAMES.items():
         button = ButtonComponent(
             action=PostbackAction(
-                label=f"📖 {name}",
+                label=f"{name}",
                 data=f"english_difficulty={key}"
             ),
             style="primary",
@@ -363,7 +363,7 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
     difficulty_name = DIFFICULTY_NAMES.get(difficulty_id, "英文單字")
 
     title = TextComponent(
-        text=f"📚 {difficulty_name}",
+        text=f"{difficulty_name}",
         weight="bold",
         size="xl",
         align="center",
@@ -396,7 +396,7 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
     for count in range(1, 6):
         button = ButtonComponent(
             action=PostbackAction(
-                label=f"📖 {count} 個單字",
+                label=f"{count} 個單字",
                 data=f"english_count={difficulty_id}/{count}"
             ),
             style="primary",

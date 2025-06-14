@@ -120,14 +120,14 @@ def create_japanese_flex_bubble(word_data):
     header_box = BoxComponent(
         layout="vertical",
         contents=[
-            TextComponent(text="📖日文單字", weight="bold", size="lg", color=COLOR_THEME['text_primary'])
+            TextComponent(text="日文單字", weight="bold", size="lg", color=COLOR_THEME['text_primary'])
         ],
         background_color=COLOR_THEME['card']
     )
 
     body_contents = [
         TextComponent(
-            text=f"📚 {word_data['word']} ({word_data['part_of_speech']})",
+            text=f"{word_data['word']} ({word_data['part_of_speech']})",
             weight="bold",
             size="xl",
             color=COLOR_THEME['text_primary'],
