@@ -1,6 +1,5 @@
 import logging
 import random
-from typing import Optional, Union
 from urllib.parse import urljoin, unquote
 
 import requests
@@ -38,49 +37,6 @@ TOPIC_NAMES = {
     '6': '體育',
     '7': '健康'
 }
-
-
-def generate_news_topic_options() -> str:
-    """生成新聞主題選項文字"""
-    result = ["📰 新聞查詢", "格式：主題/數量", "範例：1/5 表示台灣新聞5則", ""]
-    for key, name in TOPIC_NAMES.items():
-        result.append(f"{key}. {name}")
-    result.append("")
-    result.append("💡 數量可選1-10則")
-    return "\n".join(result)
-
-
-def parse_news_format(msg: str) -> Optional[tuple]:
-    """
-    解析新聞格式：主題數字/數量數字
-    例如：1/5 表示主題 1，數量 5
-    """
-    if '/' in msg:
-        parts = msg.split('/')
-        if len(parts) == 2:
-            try:
-                topic_id = int(parts[0].strip())
-                count = int(parts[1].strip())
-                return topic_id, count
-            except ValueError:
-                return None
-    return None
-
-
-def handle_news_input(msg: str) -> tuple[Union[str, FlexSendMessage], bool]:
-    """
-    處理新聞輸入，返回新聞內容或提示訊息
-    返回: (結果, 是否成功處理)
-    """
-    parsed_result = parse_news_format(msg)
-    if parsed_result:
-        topic_id, count = parsed_result
-        if 1 <= topic_id <= len(TOPIC_NAMES) and 1 <= count <= 10:
-            return get_news(topic_id, count), True  # 成功獲取新聞
-        else:
-            return generate_news_topic_options(), False  # 參數錯誤，需要重新輸入
-    else:
-        return generate_news_topic_options(), False  # 格式錯誤，需要重新輸入
 
 
 def get_news(topic_id, count):
@@ -197,7 +153,7 @@ def shorten_url(long_url):
 def get_news_topic_menu():
     """生成新聞主題選單"""
     title = TextComponent(
-        text="📰 新聞主題",
+        text="新聞主題",
         weight="bold",
         size="xl",
         align="center",
@@ -227,15 +183,15 @@ def get_news_topic_menu():
     )
 
     buttons = []
-    for topic_id, topic_name in TOPIC_NAMES.items():
+    for i, (topic_id, topic_name) in enumerate(TOPIC_NAMES.items()):
         buttons.append(
             ButtonComponent(
                 action=PostbackAction(
-                    label=f"📰 {topic_name}",
+                    label=f"{topic_name}",
                     data=f"news_topic={topic_id}"
                 ),
                 style="primary",
-                color=COLOR_THEME['primary'],
+                color=COLOR_THEME['primary'] if i % 2 == 0 else COLOR_THEME['info'],
                 margin="sm",
                 height="sm"
             )
@@ -266,7 +222,7 @@ def get_news_count_menu(topic_id: str):
     topic_name = TOPIC_NAMES.get(topic_id, '新聞')
 
     title = TextComponent(
-        text=f"📰 {topic_name}新聞",
+        text=f"{topic_name}新聞",
         weight="bold",
         size="xl",
         align="center",
@@ -300,11 +256,11 @@ def get_news_count_menu(topic_id: str):
         buttons.append(
             ButtonComponent(
                 action=PostbackAction(
-                    label=f"📰 {count} 則新聞",
+                    label=f"{count} 則新聞",
                     data=f"news_count={topic_id}/{count}"
                 ),
                 style="primary",
-                color=COLOR_THEME['primary'],
+                color=COLOR_THEME['primary'] if count % 2 == 1 else COLOR_THEME['info'],
                 margin="sm",
                 height="sm"
             )
