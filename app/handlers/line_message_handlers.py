@@ -110,6 +110,7 @@ def process_text_message(event):
     """處理文字訊息的主要入口點"""
     chat_id = event.source.group_id if event.source.type == 'group' else event.source.user_id
     message_text = event.message.text
+    logger.info(f"[TextMessage] chat_id: {chat_id}, message: {message_text}")
 
     try:
         response = process_user_input(chat_id, message_text)

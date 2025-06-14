@@ -41,7 +41,7 @@ def toggle_ai_status(chat_id: str) -> bool:
     :param chat_id: 聊天室 ID（群組 ID 或用戶 ID）
     :return: 切換後的狀態（True 表示開啟，False 表示關閉）
     """
-    current_status = chat_ai_status.get(chat_id, True)
+    current_status = chat_ai_status.get(chat_id, False)
     chat_ai_status[chat_id] = not current_status
     return chat_ai_status[chat_id]
 
@@ -52,7 +52,7 @@ def get_ai_status(chat_id: str) -> bool:
     :param chat_id: 聊天室 ID（群組 ID 或用戶 ID）
     :return: 當前狀態（True 表示開啟，False 表示關閉）
     """
-    return chat_ai_status.get(chat_id, True)
+    return chat_ai_status.get(chat_id, False)
 
 
 # 20250505 根據模型性能和限制重新排序的備用模型列表
