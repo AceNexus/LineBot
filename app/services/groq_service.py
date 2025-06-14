@@ -138,8 +138,8 @@ def chat_with_groq(chat_id: str, message: str, model: str = "llama-3.3-70b-versa
                 messages=user_sessions[session_type][chat_id],
                 model=current_model,
                 temperature=0.7,
-                max_tokens=1000,
-                timeout=3
+                max_tokens=2000,
+                timeout=10
             )
 
             reply = response.choices[0].message.content
