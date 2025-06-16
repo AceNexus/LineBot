@@ -581,23 +581,43 @@ def get_subscription_menu() -> FlexSendMessage:
 
 
 def get_difficulty_menu() -> FlexSendMessage:
-    """生成訂閱難度選單"""
-    buttons = []
-    for level_id, level_name in DIFFICULTY_NAMES.items():
-        button = ButtonComponent(
-            action=PostbackAction(
-                label=f"{level_name}",
-                data=f"english_subscribe_difficulty={level_id}"
-            ),
-            style="primary",
-            color=COLOR_THEME['primary'],
-            margin="sm",
-            height="sm"
-        )
-        buttons.append(button)
+    """生成訂閱難度選單（宮格形式）"""
+    difficulty_items = list(DIFFICULTY_NAMES.items())
+    grid_rows = []
 
-    bubble = create_menu_bubble("選擇單字難度", "請選擇訂閱的單字難度等級", buttons)
-    return FlexSendMessage(alt_text="訂閱難度選單", contents=bubble)
+    for i in range(0, len(difficulty_items), 3):
+        row_buttons = []
+        for j in range(3):
+            index = i + j
+            if index < len(difficulty_items):
+                level_id, level_name = difficulty_items[index]
+                button = ButtonComponent(
+                    action=PostbackAction(
+                        label=level_name,
+                        data=f"english_subscribe_difficulty={level_id}"
+                    ),
+                    style="primary",
+                    color=COLOR_THEME['primary'] if index % 2 == 0 else COLOR_THEME['info'],
+                    flex=1,
+                    height="sm"
+                )
+                row_buttons.append(button)
+        grid_rows.append(BoxComponent(
+            layout="horizontal",
+            contents=row_buttons,
+            spacing="xs"
+        ))
+
+    bubble = create_menu_bubble(
+        title="選擇單字難度",
+        subtitle="請選擇訂閱的單字難度等級",
+        buttons=grid_rows
+    )
+
+    return FlexSendMessage(
+        alt_text="訂閱難度選單",
+        contents=bubble
+    )
 
 
 def get_count_menu(difficulty_id: str) -> FlexSendMessage:

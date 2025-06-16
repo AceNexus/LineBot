@@ -150,8 +150,8 @@ def shorten_url(long_url):
         return long_url
 
 
-def get_news_topic_menu():
-    """生成新聞主題選單"""
+def get_news_topic_menu() -> FlexSendMessage:
+    """生成新聞主題選單 - 動態宮格樣式（每行 3 顆按鈕）"""
     title = TextComponent(
         text="新聞主題",
         weight="bold",
@@ -182,24 +182,36 @@ def get_news_topic_menu():
         background_color=COLOR_THEME['card']
     )
 
-    buttons = []
-    for i, (topic_id, topic_name) in enumerate(TOPIC_NAMES.items()):
-        buttons.append(
-            ButtonComponent(
-                action=PostbackAction(
-                    label=f"{topic_name}",
-                    data=f"news_topic={topic_id}"
-                ),
-                style="primary",
-                color=COLOR_THEME['primary'] if i % 2 == 0 else COLOR_THEME['info'],
-                margin="sm",
-                height="sm"
-            )
-        )
+    # 動態建立宮格按鈕（每列 3 顆）
+    topic_items = list(TOPIC_NAMES.items())
+    grid_rows = []
+
+    for i in range(0, len(topic_items), 3):
+        row_buttons = []
+        for j in range(3):
+            index = i + j
+            if index < len(topic_items):
+                topic_id, topic_name = topic_items[index]
+                button = ButtonComponent(
+                    action=PostbackAction(
+                        label=topic_name,
+                        data=f"news_topic={topic_id}"
+                    ),
+                    style="primary",
+                    color=COLOR_THEME['primary'] if index % 2 == 0 else COLOR_THEME['info'],
+                    flex=1,
+                    height="sm"
+                )
+                row_buttons.append(button)
+        grid_rows.append(BoxComponent(
+            layout="horizontal",
+            contents=row_buttons,
+            spacing="xs"
+        ))
 
     footer_box = BoxComponent(
         layout="vertical",
-        contents=buttons,
+        contents=grid_rows,
         spacing="sm",
         padding_all="lg",
         background_color=COLOR_THEME['card']
@@ -214,7 +226,10 @@ def get_news_topic_menu():
         )
     )
 
-    return FlexSendMessage(alt_text="新聞主題選單", contents=bubble)
+    return FlexSendMessage(
+        alt_text="新聞主題選單",
+        contents=bubble
+    )
 
 
 def get_news_count_menu(topic_id: str):

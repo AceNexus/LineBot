@@ -22,9 +22,9 @@ DIFFICULTY_LEVELS = {
 
 # 難度名稱
 DIFFICULTY_NAMES = {
-    '1': '初級 (Basic)',
-    '2': '中級 (Intermediate)',
-    '3': '高級 (Advanced)'
+    '1': '初級',
+    '2': '中級',
+    '3': '高級'
 }
 
 
@@ -293,7 +293,8 @@ def create_word_bubble(word_data: dict, difficulty_name: str):
 
 
 def get_english_difficulty_menu() -> FlexSendMessage:
-    """生成英文單字難度選單"""
+    """生成英文單字難度選單 - 宮格樣式"""
+
     title = TextComponent(
         text="英文單字學習",
         weight="bold",
@@ -324,23 +325,36 @@ def get_english_difficulty_menu() -> FlexSendMessage:
         background_color=COLOR_THEME['card']
     )
 
-    buttons = []
-    for key, name in DIFFICULTY_NAMES.items():
-        button = ButtonComponent(
-            action=PostbackAction(
-                label=f"{name}",
-                data=f"english_difficulty={key}"
-            ),
-            style="primary",
-            color=COLOR_THEME['primary'],
-            margin="sm",
-            height="sm"
-        )
-        buttons.append(button)
+    # 建立宮格按鈕（每列 3 顆）
+    difficulty_items = list(DIFFICULTY_NAMES.items())
+    grid_rows = []
+
+    for i in range(0, len(difficulty_items), 3):
+        row_buttons = []
+        for j in range(3):
+            index = i + j
+            if index < len(difficulty_items):
+                key, name = difficulty_items[index]
+                button = ButtonComponent(
+                    action=PostbackAction(
+                        label=name,
+                        data=f"english_difficulty={key}"
+                    ),
+                    style="primary",
+                    color=COLOR_THEME['primary'] if index % 2 == 0 else COLOR_THEME['info'],
+                    flex=1,
+                    height="sm"
+                )
+                row_buttons.append(button)
+        grid_rows.append(BoxComponent(
+            layout="horizontal",
+            contents=row_buttons,
+            spacing="xs"
+        ))
 
     footer_box = BoxComponent(
         layout="vertical",
-        contents=buttons,
+        contents=grid_rows,
         spacing="sm",
         padding_all="lg",
         background_color=COLOR_THEME['card']
@@ -355,7 +369,10 @@ def get_english_difficulty_menu() -> FlexSendMessage:
         )
     )
 
-    return FlexSendMessage(alt_text="英文單字難度選單", contents=bubble)
+    return FlexSendMessage(
+        alt_text="英文單字難度選單",
+        contents=bubble
+    )
 
 
 def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
