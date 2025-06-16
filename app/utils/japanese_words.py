@@ -50,7 +50,7 @@ def get_japanese_word(chat_id: str):
 
     try:
         if isinstance(response, str):
-            logger.info(f"Response is a string: {response[:200]}")
+            logger.info(f"Response is a string: {response}")
             try:
                 word_data = json.loads(response)
             except json.JSONDecodeError:
@@ -63,7 +63,7 @@ def get_japanese_word(chat_id: str):
                     raise ValueError("Unable to extract JSON format from the string response")
         elif hasattr(response, 'text'):
             response_text = response.text
-            logger.info(f"Response has text attribute: {response_text[:200]}")
+            logger.info(f"Response has text attribute: {response_text}")
             try:
                 word_data = json.loads(response_text)
             except json.JSONDecodeError:
