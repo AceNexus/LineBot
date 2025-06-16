@@ -4,7 +4,7 @@ from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from app.utils.english_subscribe import SUBSCRIPTION_TIMES as ENGLISH_TIMES
+from app.utils.english_subscribe import SUBSCRIPTION_TIMES as ENGLISH_TIMES, subscription_manager
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,36 @@ def send_subscription_notification(time_id, language):
 
 def send_english_notification(time_id):
     """發送英文訂閱通知"""
-    print(f"English subscription sent for {time_id}")
+    try:
+        time_str = ENGLISH_TIMES.get(time_id)
+        if not time_str:
+            logger.error(f"Invalid time_id: {time_id}")
+            return
+
+        # 使用 subscription_manager 取得該時段的所有訂閱
+        subscriptions = subscription_manager.get_subscriptions_by_time(time_str)
+
+        if not subscriptions:
+            logger.info(f"No subscriptions found for time slot: {time_str}")
+            return
+
+        # 對每個訂閱者發送通知
+        for subscription in subscriptions:
+            try:
+                # 取得訂閱者的資訊
+                logger.info(f"Start - Successfully sent notification to user")
+                logger.info(subscription.user_id)
+                logger.info(subscription.difficulty_id)
+                logger.info(subscription.difficulty_name)
+                logger.info(subscription.count)
+                logger.info(f"End - Successfully sent notification to user")
+
+            except Exception as e:
+                logger.error(f"Error sending notification to user {subscription.user_id}: {e}")
+                continue
+
+    except Exception as e:
+        logger.error(f"Error in send_english_notification: {e}")
 
 
 def send_japanese_notification(time_id):
