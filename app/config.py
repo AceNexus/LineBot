@@ -22,7 +22,6 @@ class Config:
     SPRING_CONFIG_PASSWORD = os.getenv('SPRING_CONFIG_PASSWORD')
     EUREKA_SERVER_HOST = os.getenv('EUREKA_SERVER_HOST')
     EUREKA_SERVER_PORT = os.getenv('EUREKA_SERVER_PORT')
-    TIMEZONE = os.getenv('TIMEZONE')
 
 
 def load_app_config(app, profile):

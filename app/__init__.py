@@ -1,9 +1,5 @@
-import datetime
 import logging
 import os
-import platform
-import time
-from datetime import datetime
 
 import py_eureka_client.eureka_client as eureka_client
 from flask import Flask
@@ -33,16 +29,6 @@ def create_app():
     app.logger.setLevel(log_level)
     setup_logger(app)
     logger.info(f"Application started in {profile} environment with log level: {log_level}")
-
-    # 設定時區
-    timezone_str = app.config.get('TIMEZONE', 'Asia/Taipei')
-    os.environ['TZ'] = timezone_str
-
-    # 只有在 Unix-like 系統才執行 tzset
-    if platform.system() != 'Windows':
-        time.tzset()
-
-    logger.info(f"Server timezone set to: {datetime.now().astimezone().strftime('%z')}")
 
     # 註冊Eureka服務
     register_with_eureka(
