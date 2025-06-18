@@ -9,3 +9,4 @@ certifi
 py-eureka-client
 playwright==1.52.0
 apscheduler
+tzdata

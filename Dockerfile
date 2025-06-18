@@ -17,5 +17,5 @@ COPY . /app/
 ENV FLASK_APP=main.py
 ENV PORT=5000
 
-# 啟動應用程式
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT main:app"]
+# 啟動應用程式（Gunicorn 也使用台北時間）
+CMD ["sh", "-c", "TZ=Asia/Taipei gunicorn --bind 0.0.0.0:$PORT main:app"]
