@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/playwright/python:v1.52.0-jammy
 
 # 設定時區
 ENV TZ=Asia/Taipei
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 設定工作目錄
 WORKDIR /app

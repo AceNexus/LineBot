@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 
 import requests
@@ -14,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 def init_scheduler():
     """初始化排程器"""
-    scheduler = BackgroundScheduler()
+    tz = os.environ.get('TZ', 'UTC')
+    scheduler = BackgroundScheduler(timezone=tz)
 
     # 設定英文訂閱排程
     _setup_subscription_schedule(scheduler, ENGLISH_TIMES, 'english')
