@@ -27,7 +27,12 @@ from app.utils.english_words import (
 )
 from app.utils.japanese_words import get_japanese_word
 from app.utils.lumos import get_lumos
-from app.utils.medication import get_medication_menu
+from app.utils.medication import (
+    get_medication_menu, get_medication_list_flex, get_today_records,
+    delete_medication, start_add_medication, is_adding_medication,
+    set_medication_name, finish_add_medication, cancel_add_medication,
+    get_add_medication_step, get_time_select_menu
+)
 from app.utils.menu import get_menu
 from app.utils.movie import get_movies
 from app.utils.news import get_news_topic_menu, get_news_count_menu, get_news
@@ -37,9 +42,6 @@ logger = logging.getLogger(__name__)
 """定義命令別名"""
 MENU_COMMANDS = ["0", "啊哇呾喀呾啦", "menu", "選單"]
 LUMOS_COMMANDS = ["路摸思", "lumos"]
-
-# TODO
-"""追蹤正在處理的用戶請求"""
 
 
 @handler.add(PostbackEvent)
@@ -98,8 +100,40 @@ def handle_postback(event):
             response = get_english_words(chat_id, int(difficulty_id), int(count))
         elif action == 'medication_menu':
             response = get_medication_menu()
+        elif action == 'med_list':
+            response = get_medication_list_flex(chat_id)
+        elif action == 'med_today':
+            response = get_today_records(chat_id)
+        elif action.startswith('delete_medication_'):
+            med_id = int(action.replace('delete_medication_', ''))
+            success = delete_medication(chat_id, med_id)
+            if success:
+                response = [
+                    TextSendMessage(text="藥品已刪除"),
+                    get_medication_list_flex(chat_id)
+                ]
+            else:
+                response = TextSendMessage(text="刪除失敗，請重試")
+        elif action == 'start_add_medication':
+            start_add_medication(chat_id)
+            response = TextSendMessage(text="請輸入藥品名稱：")
+        elif action.startswith('add_medication_time='):
+            time = action.replace('add_medication_time=', '')
+            success, message = finish_add_medication(chat_id, time)
+            if success:
+                response = [
+                    TextSendMessage(text=message),
+                    get_medication_list_flex(chat_id)
+                ]
+            else:
+                response = TextSendMessage(text=message)
+        elif action == 'custom_time':
+            response = TextSendMessage(text="請輸入自訂時間（格式：HH:MM，例如 08:30）：")
+        elif action == 'cancel_add_medication':
+            cancel_add_medication(chat_id)
+            response = TextSendMessage(text="已取消新增藥品")
         else:
-            response = "這功能正在裝上輪子，還在趕來的路上"
+            response = TextSendMessage(text="這功能正在裝上輪子，還在趕來的路上")
 
         reply_to_user(event.reply_token, response)
 
@@ -116,9 +150,40 @@ def process_text_message(event):
     logger.info(f"[TextMessage] chat_id: {chat_id}, message: {message_text}")
 
     try:
+        # 新增藥品互動流程
+        if is_adding_medication(chat_id):
+            step = get_add_medication_step(chat_id)
+
+            if step == 1:
+                # 步驟1：輸入藥品名稱
+                name = message_text.strip()
+                if not name:
+                    reply_to_user(event.reply_token, TextSendMessage(text="藥品名稱不能為空，請重新輸入："))
+                    return
+
+                set_medication_name(chat_id, name)
+                reply_to_user(event.reply_token, get_time_select_menu(chat_id))
+                return
+
+            elif step == 2:
+                # 步驟2：輸入時間（自訂時間）
+                time = message_text.strip()
+                success, message = finish_add_medication(chat_id, time)
+
+                if success:
+                    reply_to_user(event.reply_token, [
+                        TextSendMessage(text=message),
+                        get_medication_list_flex(chat_id)
+                    ])
+                else:
+                    reply_to_user(event.reply_token, TextSendMessage(text=message))
+                return
+
+        # 一般訊息處理
         response = process_user_input(chat_id, message_text)
         if response is not None:
             reply_to_user(event.reply_token, response)
+
     except Exception as e:
         logger.error(f"處理文字訊息時發生錯誤 (聊天室: {chat_id}): {e}", exc_info=True)
         reply_to_user(event.reply_token, "系統忙碌中，請稍後重試。若問題持續發生，請聯繫客服，謝謝您的耐心!")

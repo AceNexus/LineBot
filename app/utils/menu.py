@@ -11,8 +11,11 @@ from app.utils.theme import COLOR_THEME
 logger = logging.getLogger(__name__)
 
 
-def create_button(label, action, color, emoji=None):
+def create_button(label, action, color, emoji=None, flex=None):
     btn_label = f"{emoji} {label}" if emoji else label
+    kwargs = {}
+    if flex is not None:
+        kwargs['flex'] = flex
     return ButtonComponent(
         action=PostbackAction(
             label=btn_label,
@@ -21,7 +24,8 @@ def create_button(label, action, color, emoji=None):
         style="primary",
         color=color,
         margin="sm",
-        height="sm"
+        height="sm",
+        **kwargs
     )
 
 
