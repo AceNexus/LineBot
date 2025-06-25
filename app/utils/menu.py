@@ -60,7 +60,8 @@ def get_menu():
         create_button("🇯🇵", "日文單字", "japanese", COLOR_THEME['primary']),
         create_button("🇺🇸", "英文單字", "english", COLOR_THEME['info']),
         create_button("📅", "英文訂閱", "english_subscribe", COLOR_THEME['primary']),
-        create_button("🤖", "AI 回應開關", "toggle_ai", COLOR_THEME['info'])
+        create_button("💊", "用藥管理", "medication_menu", COLOR_THEME['info']),
+        create_button("🤖", "AI 回應開關", "toggle_ai", COLOR_THEME['primary'])
     ]
 
     footer_box = BoxComponent(
