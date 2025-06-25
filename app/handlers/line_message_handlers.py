@@ -27,6 +27,7 @@ from app.utils.english_words import (
 )
 from app.utils.japanese_words import get_japanese_word
 from app.utils.lumos import get_lumos
+from app.utils.medication import get_medication_menu
 from app.utils.menu import get_menu
 from app.utils.movie import get_movies
 from app.utils.news import get_news_topic_menu, get_news_count_menu, get_news
@@ -95,6 +96,8 @@ def handle_postback(event):
         elif english_count:
             difficulty_id, count = english_count.split('/')
             response = get_english_words(chat_id, int(difficulty_id), int(count))
+        elif action == 'medication_menu':
+            response = get_medication_menu()
         else:
             response = "這功能正在裝上輪子，還在趕來的路上"
 

@@ -11,6 +11,20 @@ from app.utils.theme import COLOR_THEME
 logger = logging.getLogger(__name__)
 
 
+def create_button(label, action, color, emoji=None):
+    btn_label = f"{emoji} {label}" if emoji else label
+    return ButtonComponent(
+        action=PostbackAction(
+            label=btn_label,
+            data=f"action={action}"
+        ),
+        style="primary",
+        color=color,
+        margin="sm",
+        height="sm"
+    )
+
+
 def get_menu():
     title = TextComponent(
         text="AI 功能選單",
@@ -42,26 +56,14 @@ def get_menu():
         background_color=COLOR_THEME['card']
     )
 
-    def create_button(emoji, label, action, color):
-        return ButtonComponent(
-            action=PostbackAction(
-                label=f"{emoji} {label}",
-                data=f"action={action}"
-            ),
-            style="primary",
-            color=color,
-            margin="sm",
-            height="sm"
-        )
-
     buttons = [
-        create_button("📰", "新聞快訊", "news", COLOR_THEME['primary']),
-        create_button("🎬", "熱門電影", "movie", COLOR_THEME['info']),
-        create_button("🇯🇵", "日文單字", "japanese", COLOR_THEME['primary']),
-        create_button("🇺🇸", "英文單字", "english", COLOR_THEME['info']),
-        create_button("📅", "英文訂閱", "english_subscribe", COLOR_THEME['primary']),
-        create_button("💊", "用藥管理", "medication_menu", COLOR_THEME['info']),
-        create_button("🤖", "AI 回應開關", "toggle_ai", COLOR_THEME['primary'])
+        create_button("新聞快訊", "news", COLOR_THEME['primary'], emoji="📰"),
+        create_button("熱門電影", "movie", COLOR_THEME['info'], emoji="🎬"),
+        create_button("日文單字", "japanese", COLOR_THEME['primary'], emoji="🇯🇵"),
+        create_button("英文單字", "english", COLOR_THEME['info'], emoji="🇺🇸"),
+        create_button("英文訂閱", "english_subscribe", COLOR_THEME['primary'], emoji="📅"),
+        create_button("用藥管理", "medication_menu", COLOR_THEME['info'], emoji="💊"),
+        create_button("AI 回應開關", "toggle_ai", COLOR_THEME['primary'], emoji="🤖")
     ]
 
     footer_box = BoxComponent(
