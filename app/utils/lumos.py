@@ -47,7 +47,8 @@ def get_lumos():
         ("Nginx", "https://pse.is/7j2gw5"),
         ("Database", "https://pse.is/7j2gwq"),
         ("LINE Bot", "https://pse.is/7j2h2j"),
-        ("VirtualBox", "https://pse.is/7j2j9a")
+        ("VirtualBox", "https://pse.is/7j2j9a"),
+        ("Ngrok", "https://pse.is/7tkylz")
     ]
 
     footer_contents = []
