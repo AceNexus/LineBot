@@ -11,10 +11,18 @@ from app.utils.theme import COLOR_THEME
 
 logger = logging.getLogger(__name__)
 
+# ===== 用藥提醒固定時段，供全專案共用 =====
+common_times = ["08:00", "12:00", "18:00", "21:00", "00:48"]
+
 # ===== In-memory 資料暫存區 =====
 medications_db = []  # 每筆: {'id', 'user_id', 'name', 'time'}
 medication_id_counter = [1]
 add_medication_state = {}  # 新增藥品狀態追蹤
+
+
+def get_medications_by_time(time_str):
+    """取得指定時間的所有用藥清單，回傳 [(user_id, name)]"""
+    return [(m['user_id'], m['name']) for m in medications_db if m['time'] == time_str]
 
 
 def is_valid_time_format(time_str):
@@ -281,14 +289,11 @@ def get_medication_list_flex(user_id):
 def get_time_select_menu(user_id=None):
     """時間選擇選單"""
     # 只提供常用時間
-    common_times = ["08:00", "12:00", "18:00", "21:00"]
-
     buttons = []
     for time in common_times:
         buttons.append(
             create_button(f"{time}", f"add_medication_time={time}", COLOR_THEME['primary'],
-                          display_text=f"用藥管理：設定提醒時間 {time}")
-        )
+                          display_text=f"用藥管理：設定提醒時間 {time}"))
 
     # 自訂時間選項
     buttons.append(

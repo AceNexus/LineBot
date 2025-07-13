@@ -9,6 +9,7 @@ from apscheduler.triggers.cron import CronTrigger
 from app.config import Config
 from app.utils.english_subscribe import SUBSCRIPTION_TIMES as ENGLISH_TIMES, subscription_manager
 from app.utils.english_words import get_english_words
+from app.utils.medication import common_times, get_medications_by_time
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +19,13 @@ def init_scheduler():
     tz = os.environ.get('TZ', 'UTC')
     scheduler = BackgroundScheduler(timezone=tz)
 
-    # 設定英文訂閱排程
+    # 英文訂閱排程
     _setup_subscription_schedule(scheduler, ENGLISH_TIMES, 'english')
 
-    # TODO 設定日文訂閱排程
+    # TODO 日文訂閱排程
+
+    # 用藥管理排程
+    _setup_medication_schedule(scheduler)
 
     scheduler.start()
     logger.info("All language schedulers have been started")
@@ -165,3 +169,39 @@ def send_line_message_push(channel_token, user_id, message):
     except Exception as e:
         logger.error(f"推播時發生錯誤：{e}")
         return False
+
+
+def _setup_medication_schedule(scheduler):
+    """只根據 common_times 設排程，每個時間一個 job，job 內查詢該時段所有藥品推播"""
+    for time_str in common_times:
+        try:
+            hour, minute = map(int, time_str.split(':'))
+            scheduler.add_job(
+                func=send_medication_notification,
+                trigger=CronTrigger(hour=hour, minute=minute),
+                args=[time_str],
+                id=f'medication_{time_str.replace(":", "")}',
+                name=f'Medication Schedule - {time_str}',
+                replace_existing=True
+            )
+            logger.info(f"Successfully set medication schedule: Daily at {time_str}")
+        except Exception as e:
+            logger.error(f"Error setting up medication schedule {time_str}: {e}")
+
+
+def send_medication_notification(time_str):
+    """發送該時段所有用藥提醒通知"""
+    for user_id, med_name in get_medications_by_time(time_str):
+        try:
+            message = {
+                "type": "text",
+                "text": f"💊 用藥提醒：該服用 {med_name} 囉！"
+            }
+            send_line_message_push(
+                Config.LINE_CHANNEL_ACCESS_TOKEN,
+                user_id,
+                message
+            )
+            logger.info(f"成功推播用藥提醒給 {user_id}：{med_name}")
+        except Exception as e:
+            logger.error(f"推播用藥提醒失敗 {user_id}：{med_name}，錯誤：{e}")
