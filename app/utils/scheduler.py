@@ -5,11 +5,14 @@ from datetime import datetime
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, ButtonComponent, \
+    PostbackAction
 
 from app.config import Config
 from app.utils.english_subscribe import SUBSCRIPTION_TIMES as ENGLISH_TIMES, subscription_manager
 from app.utils.english_words import get_english_words
 from app.utils.medication import common_times, get_medications_by_time
+from app.utils.theme import COLOR_THEME
 
 logger = logging.getLogger(__name__)
 
@@ -193,10 +196,42 @@ def send_medication_notification(time_str):
     """發送該時段所有用藥提醒通知"""
     for user_id, med_name in get_medications_by_time(time_str):
         try:
-            message = {
-                "type": "text",
-                "text": f"💊 用藥提醒：該服用 {med_name} 囉！"
-            }
+            data_str = f"action=medication_confirm&user_id={user_id}&med_name={med_name}&time={time_str}"
+            message = FlexSendMessage(
+                alt_text="💊 用藥提醒",
+                contents=BubbleContainer(
+                    body=BoxComponent(
+                        layout="vertical",
+                        contents=[
+                            TextComponent(text="💊 用藥提醒", weight="bold", size="xl", color=COLOR_THEME['text_primary']),
+                            TextComponent(text=f"藥品：{med_name}", size="md", color=COLOR_THEME['text_secondary']),
+                            TextComponent(text=f"時間：{time_str}", size="sm", color=COLOR_THEME['text_hint']),
+                        ],
+                        background_color=COLOR_THEME['card'],
+                        padding_all="lg"
+                    ),
+                    footer=BoxComponent(
+                        layout="vertical",
+                        contents=[
+                            ButtonComponent(
+                                action=PostbackAction(
+                                    label="我已吃藥",
+                                    data=data_str
+                                ),
+                                style="primary",
+                                color=COLOR_THEME['primary'],
+                                height="sm"
+                            )
+                        ],
+                        background_color=COLOR_THEME['card'],
+                        padding_all="lg"
+                    ),
+                    styles={
+                        "body": {"backgroundColor": COLOR_THEME['card']},
+                        "footer": {"backgroundColor": COLOR_THEME['card']}
+                    }
+                )
+            )
             send_line_message_push(
                 Config.LINE_CHANNEL_ACCESS_TOKEN,
                 user_id,

@@ -1,5 +1,6 @@
 import logging
 import re
+from datetime import datetime
 
 from linebot.models import (
     FlexSendMessage, BubbleContainer, BoxComponent,
@@ -12,12 +13,15 @@ from app.utils.theme import COLOR_THEME
 logger = logging.getLogger(__name__)
 
 # ===== 用藥提醒固定時段，供全專案共用 =====
-common_times = ["08:00", "12:00", "18:00", "21:00", "00:48"]
+common_times = ["08:00", "12:00", "18:00", "21:00"]
 
 # ===== In-memory 資料暫存區 =====
 medications_db = []  # 每筆: {'id', 'user_id', 'name', 'time'}
 medication_id_counter = [1]
 add_medication_state = {}  # 新增藥品狀態追蹤
+
+# ===== 今日用藥狀態暫存區 =====
+today_medication_status = {}  # key: (user_id, name, time, date), value: True/False
 
 
 def get_medications_by_time(time_str):
@@ -120,6 +124,16 @@ def get_add_medication_step(user_id):
     if user_id in add_medication_state:
         return add_medication_state[user_id]["step"]
     return 0
+
+
+def mark_medication_taken(user_id, name, time, date):
+    """標記今日該藥已吃"""
+    today_medication_status[(user_id, name, time, date)] = True
+
+
+def is_medication_taken(user_id, name, time, date):
+    """查詢今日該藥是否已吃"""
+    return today_medication_status.get((user_id, name, time, date), False)
 
 
 def get_medication_menu():
@@ -347,6 +361,7 @@ def get_time_select_menu(user_id=None):
 def get_today_records(user_id):
     """今日記錄"""
     meds = get_medications(user_id)
+    today = datetime.now().strftime("%Y-%m-%d")
 
     if not meds:
         bubble = BubbleContainer(
@@ -377,6 +392,9 @@ def get_today_records(user_id):
     else:
         med_status = []
         for med in meds:
+            taken = is_medication_taken(user_id, med['name'], med['time'], today)
+            status_text = "✅ 已服用" if taken else "⏳ 待服用"
+            status_color = COLOR_THEME['success'] if taken else COLOR_THEME['warning']
             med_status.append(
                 BoxComponent(
                     layout="horizontal",
@@ -394,9 +412,9 @@ def get_today_records(user_id):
                             flex=2
                         ),
                         TextComponent(
-                            text="⏳ 待服用",
+                            text=status_text,
                             size="sm",
-                            color=COLOR_THEME['warning'],
+                            color=status_color,
                             flex=2
                         )
                     ],

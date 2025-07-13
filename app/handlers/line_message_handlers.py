@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import List, Union
 from urllib.parse import parse_qs
 
@@ -31,7 +32,8 @@ from app.utils.medication import (
     get_medication_menu, get_medication_list_flex, get_today_records,
     delete_medication, start_add_medication, is_adding_medication,
     set_medication_name, finish_add_medication, cancel_add_medication,
-    get_add_medication_step, get_time_select_menu
+    get_add_medication_step, get_time_select_menu,
+    mark_medication_taken
 )
 from app.utils.menu import get_menu
 from app.utils.movie import get_movies
@@ -127,6 +129,14 @@ def handle_postback(event):
                 ]
             else:
                 response = TextSendMessage(text=message)
+        elif action == 'medication_confirm':
+            user_id = data.get('user_id', [chat_id])[0]
+            med_name = data.get('med_name', [''])[0]
+            time_str = data.get('time', [''])[0]
+            today = datetime.now().strftime("%Y-%m-%d")
+            mark_medication_taken(user_id, med_name, time_str, today)
+            reply_to_user(event.reply_token, TextSendMessage(text="已記錄您今日吃藥！"))
+            return
         elif action == 'custom_time':
             response = TextSendMessage(text="請輸入自訂時間（格式：HH:MM，例如 08:30）：")
         elif action == 'cancel_add_medication':
