@@ -338,7 +338,8 @@ def get_english_difficulty_menu() -> FlexSendMessage:
                 button = ButtonComponent(
                     action=PostbackAction(
                         label=name,
-                        data=f"english_difficulty={key}"
+                        data=f"english_difficulty={key}",
+                        display_text=f"英文單字難度：{name}"
                     ),
                     style="primary",
                     color=COLOR_THEME['primary'] if index % 2 == 0 else COLOR_THEME['info'],
@@ -418,7 +419,8 @@ def get_english_count_menu(difficulty_id: str) -> FlexSendMessage:
             button = ButtonComponent(
                 action=PostbackAction(
                     label=f"{count}",
-                    data=f"english_count={difficulty_id}/{count}"
+                    data=f"english_count={difficulty_id}/{count}",
+                    display_text = f"英文單字：學習{difficulty_name}，共 {count} 個單字"
                 ),
                 style="primary",
                 color=COLOR_THEME['primary'] if count % 2 == 1 else COLOR_THEME['info'],

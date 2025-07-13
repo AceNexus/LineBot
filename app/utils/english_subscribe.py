@@ -547,7 +547,8 @@ def get_subscription_menu() -> FlexSendMessage:
         ButtonComponent(
             action=PostbackAction(
                 label="設定訂閱",
-                data="action=english_subscribe_setup"
+                data="action=english_subscribe_setup",
+                display_text="英文訂閱：開始設定訂閱"
             ),
             style="primary",
             color=COLOR_THEME['primary'],
@@ -557,7 +558,8 @@ def get_subscription_menu() -> FlexSendMessage:
         ButtonComponent(
             action=PostbackAction(
                 label="查閱訂閱",
-                data="action=english_subscribe_view"
+                data="action=english_subscribe_view",
+                display_text="英文訂閱：查看我的訂閱"
             ),
             style="primary",
             color=COLOR_THEME['info'],
@@ -567,7 +569,8 @@ def get_subscription_menu() -> FlexSendMessage:
         ButtonComponent(
             action=PostbackAction(
                 label="取消訂閱",
-                data="action=english_subscribe_cancel"
+                data="action=english_subscribe_cancel",
+                display_text="英文訂閱：取消所有訂閱"
             ),
             style="secondary",
             color=COLOR_THEME['error'],
@@ -594,7 +597,8 @@ def get_difficulty_menu() -> FlexSendMessage:
                 button = ButtonComponent(
                     action=PostbackAction(
                         label=level_name,
-                        data=f"english_subscribe_difficulty={level_id}"
+                        data=f"english_subscribe_difficulty={level_id}",
+                        display_text=f"英文訂閱難度：{level_name}"
                     ),
                     style="primary",
                     color=COLOR_THEME['primary'] if index % 2 == 0 else COLOR_THEME['info'],
@@ -632,7 +636,8 @@ def get_count_menu(difficulty_id: str) -> FlexSendMessage:
             button = ButtonComponent(
                 action=PostbackAction(
                     label=f"{count}",
-                    data=f"english_subscribe_count={difficulty_id}/{count}"
+                    data=f"english_subscribe_count={difficulty_id}/{count}",
+                    display_text=f"英文訂閱：{difficulty_name}，每天學習 {count} 個單字"
                 ),
                 style="primary",
                 color=COLOR_THEME['primary'] if count % 2 == 1 else COLOR_THEME['info'],
@@ -699,7 +704,8 @@ def get_time_menu(difficulty_id: str, count: int) -> FlexSendMessage:
         button = ButtonComponent(
             action=PostbackAction(
                 label=f"{time_name}",
-                data=f"english_subscribe_time={difficulty_id}/{count}/{time_id}"
+                data=f"english_subscribe_time={difficulty_id}/{count}/{time_id}",
+                display_text=f"英文訂閱：設定接收時間 {time_name}"
             ),
             style="primary",
             color=COLOR_THEME['primary'] if i % 2 == 0 else COLOR_THEME['info'],
@@ -783,10 +789,12 @@ def get_subscription_confirm(difficulty_id: str, count: int, selected_time: str)
         background_color=COLOR_THEME['card']
     )
 
+    display_text = f"英文訂閱：確認訂閱 {difficulty_name}，每天{count}個單字，{time_name} 發送"
     confirm_button = ButtonComponent(
         action=PostbackAction(
             label="確認",
-            data=f"english_subscribe_save={difficulty_id}/{count}/{selected_time}"
+            data=f"english_subscribe_save={difficulty_id}/{count}/{selected_time}",
+            display_text=display_text
         ),
         style="primary",
         color=COLOR_THEME['success'],

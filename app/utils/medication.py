@@ -143,8 +143,8 @@ def get_medication_menu():
         footer=BoxComponent(
             layout="vertical",
             contents=[
-                create_button("藥品清單", "med_list", COLOR_THEME['primary']),
-                create_button("今日記錄", "med_today", COLOR_THEME['info'])
+                create_button("藥品清單", "med_list", COLOR_THEME['primary'], display_text="用藥管理：查看藥品清單"),
+                create_button("今日記錄", "med_today", COLOR_THEME['info'], display_text="用藥管理：查看今日記錄")
             ],
             spacing="sm",
             padding_all="lg",
@@ -163,7 +163,8 @@ def get_medication_list_flex(user_id):
     meds = get_medications(user_id)
 
     # 新增按鈕
-    add_button = create_button("➕ 新增藥品", "start_add_medication", COLOR_THEME['success'])
+    add_button = create_button("➕ 新增藥品", "start_add_medication", COLOR_THEME['success'],
+                               display_text="用藥管理：新增藥品")
 
     if not meds:
         # 空清單
@@ -227,7 +228,8 @@ def get_medication_list_flex(user_id):
                             ],
                             flex=4
                         ),
-                        create_button("⨉", f"delete_medication_{med['id']}", COLOR_THEME['error'], flex=1)
+                        create_button("⨉", f"delete_medication_{med['id']}", COLOR_THEME['error'], flex=1,
+                                      display_text=f"用藥管理：刪除藥品 {med['name']}")
                     ],
                     margin="md",
                     padding_all="sm"
@@ -284,17 +286,18 @@ def get_time_select_menu(user_id=None):
     buttons = []
     for time in common_times:
         buttons.append(
-            create_button(f"{time}", f"add_medication_time={time}", COLOR_THEME['primary'])
+            create_button(f"{time}", f"add_medication_time={time}", COLOR_THEME['primary'],
+                          display_text=f"用藥管理：設定提醒時間 {time}")
         )
 
     # 自訂時間選項
     buttons.append(
-        create_button("其他時間", "custom_time", COLOR_THEME['info'])
+        create_button("其他時間", "custom_time", COLOR_THEME['info'], display_text="用藥管理：自訂提醒時間")
     )
 
     # 取消按鈕
     buttons.append(
-        create_button("取消", "cancel_add_medication", COLOR_THEME['error'])
+        create_button("取消", "cancel_add_medication", COLOR_THEME['error'], display_text="用藥管理：取消新增藥品")
     )
 
     bubble = BubbleContainer(

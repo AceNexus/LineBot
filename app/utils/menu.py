@@ -11,7 +11,7 @@ from app.utils.theme import COLOR_THEME
 logger = logging.getLogger(__name__)
 
 
-def create_button(label, action, color, emoji=None, flex=None):
+def create_button(label, action, color, emoji=None, flex=None, display_text=None):
     btn_label = f"{emoji} {label}" if emoji else label
     kwargs = {}
     if flex is not None:
@@ -19,7 +19,8 @@ def create_button(label, action, color, emoji=None, flex=None):
     return ButtonComponent(
         action=PostbackAction(
             label=btn_label,
-            data=f"action={action}"
+            data=f"action={action}",
+            display_text=display_text or btn_label
         ),
         style="primary",
         color=color,
@@ -61,13 +62,13 @@ def get_menu():
     )
 
     buttons = [
-        create_button("新聞快訊", "news", COLOR_THEME['primary'], emoji="📰"),
-        create_button("熱門電影", "movie", COLOR_THEME['info'], emoji="🎬"),
-        create_button("日文單字", "japanese", COLOR_THEME['primary'], emoji="🇯🇵"),
-        create_button("英文單字", "english", COLOR_THEME['info'], emoji="🇺🇸"),
-        create_button("英文訂閱", "english_subscribe", COLOR_THEME['primary'], emoji="📅"),
-        create_button("用藥管理", "medication_menu", COLOR_THEME['info'], emoji="💊"),
-        create_button("AI 回應開關", "toggle_ai", COLOR_THEME['primary'], emoji="🤖")
+        create_button("新聞快訊", "news", COLOR_THEME['primary'], emoji="📰", display_text="功能選單：新聞快訊"),
+        create_button("熱門電影", "movie", COLOR_THEME['info'], emoji="🎬", display_text="功能選單：熱門電影"),
+        create_button("日文單字", "japanese", COLOR_THEME['primary'], emoji="🇯🇵", display_text="功能選單：日文單字"),
+        create_button("英文單字", "english", COLOR_THEME['info'], emoji="🇺🇸", display_text="功能選單：英文單字"),
+        create_button("英文訂閱", "english_subscribe", COLOR_THEME['primary'], emoji="📅", display_text="功能選單：英文訂閱"),
+        create_button("用藥管理", "medication_menu", COLOR_THEME['info'], emoji="💊", display_text="功能選單：用藥管理"),
+        create_button("AI 回應開關", "toggle_ai", COLOR_THEME['primary'], emoji="🤖", display_text="功能選單：切換 AI 回應開關")
     ]
 
     footer_box = BoxComponent(

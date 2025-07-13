@@ -195,7 +195,8 @@ def get_news_topic_menu() -> FlexSendMessage:
                 button = ButtonComponent(
                     action=PostbackAction(
                         label=topic_name,
-                        data=f"news_topic={topic_id}"
+                        data=f"news_topic={topic_id}",
+                        display_text=f"新聞主題：{topic_name}"
                     ),
                     style="primary",
                     color=COLOR_THEME['primary'] if index % 2 == 0 else COLOR_THEME['info'],
@@ -272,7 +273,8 @@ def get_news_count_menu(topic_id: str):
                 ButtonComponent(
                     action=PostbackAction(
                         label=str(count),
-                        data=f"news_count={topic_id}/{count}"
+                        data=f"news_count={topic_id}/{count}",
+                        display_text=f"新聞：查看{TOPIC_NAMES.get(topic_id, '新聞')}，共 {count} 則"
                     ),
                     style="primary",
                     color=COLOR_THEME['primary'] if count % 2 == 1 else COLOR_THEME['info'],
