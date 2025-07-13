@@ -13,7 +13,7 @@ from app.utils.theme import COLOR_THEME
 logger = logging.getLogger(__name__)
 
 # ===== 用藥提醒固定時段，供全專案共用 =====
-common_times = ["08:00", "12:00", "18:00", "21:00", "01:27"]
+common_times = ["08:00", "12:00", "18:00", "21:00"]
 
 # ===== In-memory 資料暫存區 =====
 medications_db = []  # 每筆: {'id', 'user_id', 'name', 'time'}
