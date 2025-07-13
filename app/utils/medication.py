@@ -2,9 +2,9 @@ import logging
 import re
 from datetime import datetime
 
+from linebot.models import ButtonComponent, PostbackAction, BoxComponent, TextComponent
 from linebot.models import (
-    FlexSendMessage, BubbleContainer, BoxComponent,
-    TextComponent, BubbleStyle, BlockStyle, SeparatorComponent
+    FlexSendMessage, BubbleContainer, BubbleStyle, BlockStyle, SeparatorComponent
 )
 
 from app.utils.menu import create_button
@@ -13,7 +13,7 @@ from app.utils.theme import COLOR_THEME
 logger = logging.getLogger(__name__)
 
 # ===== 用藥提醒固定時段，供全專案共用 =====
-common_times = ["08:00", "12:00", "18:00", "21:00"]
+common_times = ["08:00", "12:00", "18:00", "21:00", "01:27"]
 
 # ===== In-memory 資料暫存區 =====
 medications_db = []  # 每筆: {'id', 'user_id', 'name', 'time'}
@@ -395,32 +395,34 @@ def get_today_records(user_id):
             taken = is_medication_taken(user_id, med['name'], med['time'], today)
             status_text = "✅ 已服用" if taken else "⏳ 待服用"
             status_color = COLOR_THEME['success'] if taken else COLOR_THEME['warning']
-            med_status.append(
-                BoxComponent(
-                    layout="horizontal",
+            info_row = BoxComponent(
+                layout="horizontal",
+                contents=[
+                    TextComponent(text=f"{med['name']}", size="md", color=COLOR_THEME['text_primary'], flex=3),
+                    TextComponent(text=med['time'], size="sm", color=COLOR_THEME['text_secondary'], flex=2),
+                    TextComponent(text=status_text, size="sm", color=status_color, flex=2)
+                ],
+                margin="md"
+            )
+            med_status.append(info_row)
+            # 按鈕單獨一行（僅未服用時顯示）
+            if not taken:
+                button_row = BoxComponent(
+                    layout="vertical",
                     contents=[
-                        TextComponent(
-                            text=f"{med['name']}",
-                            size="md",
-                            color=COLOR_THEME['text_primary'],
-                            flex=3
-                        ),
-                        TextComponent(
-                            text=med['time'],
-                            size="sm",
-                            color=COLOR_THEME['text_secondary'],
-                            flex=2
-                        ),
-                        TextComponent(
-                            text=status_text,
-                            size="sm",
-                            color=status_color,
-                            flex=2
+                        ButtonComponent(
+                            action=PostbackAction(
+                                label="我已吃藥",
+                                data=f"action=medication_confirm&user_id={user_id}&med_name={med['name']}&time={med['time']}"
+                            ),
+                            style="primary",
+                            color=COLOR_THEME['primary'],
+                            height="sm"
                         )
                     ],
-                    margin="md"
+                    margin="sm"
                 )
-            )
+                med_status.append(button_row)
 
         bubble = BubbleContainer(
             body=BoxComponent(

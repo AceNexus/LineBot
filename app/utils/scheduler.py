@@ -223,6 +223,7 @@ def send_medication_notification(time_str):
                                 height="sm"
                             )
                         ],
+                        margin="sm",
                         background_color=COLOR_THEME['card'],
                         padding_all="lg"
                     ),
