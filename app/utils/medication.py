@@ -302,23 +302,14 @@ def get_medication_list_flex(user_id):
 
 def get_time_select_menu(user_id=None):
     """時間選擇選單"""
-    # 只提供常用時間
     buttons = []
     for time in common_times:
         buttons.append(
             create_button(f"{time}", f"add_medication_time={time}", COLOR_THEME['primary'],
                           display_text=f"用藥管理：設定提醒時間 {time}"))
-
-    # 自訂時間選項
-    buttons.append(
-        create_button("其他時間", "custom_time", COLOR_THEME['info'], display_text="用藥管理：自訂提醒時間")
-    )
-
-    # 取消按鈕
     buttons.append(
         create_button("取消", "cancel_add_medication", COLOR_THEME['error'], display_text="用藥管理：取消新增藥品")
     )
-
     bubble = BubbleContainer(
         body=BoxComponent(
             layout="vertical",
@@ -354,7 +345,6 @@ def get_time_select_menu(user_id=None):
             footer=BlockStyle(background_color=COLOR_THEME['card'])
         )
     )
-
     return FlexSendMessage(alt_text="選擇提醒時間", contents=bubble)
 
 

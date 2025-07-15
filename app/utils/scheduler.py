@@ -207,10 +207,23 @@ def send_medication_notification(time_str):
                     body=BoxComponent(
                         layout="vertical",
                         contents=[
-                            TextComponent(text="💊 用藥提醒", weight="bold", size="xl",
-                                          color=COLOR_THEME['text_primary']),
-                            TextComponent(text=f"藥品：{med_name}", size="md", color=COLOR_THEME['text_secondary']),
-                            TextComponent(text=f"時間：{time_str}", size="sm", color=COLOR_THEME['text_hint']),
+                            TextComponent(
+                                text="用藥提醒",
+                                weight="bold",
+                                size="xl",
+                                color=COLOR_THEME['text_secondary'],
+                                align="center",
+                                margin="md"
+                            ),
+                            SeparatorComponent(margin="md", color=COLOR_THEME['separator']),
+                            TextComponent(
+                                text=f"藥品名稱：{med_name}",
+                                size="md",
+                                color=COLOR_THEME['text_primary'],
+                                weight="bold",
+                                wrap=True,
+                                margin="lg"
+                            ),
                         ],
                         background_color=COLOR_THEME['card'],
                         padding_all="lg"
