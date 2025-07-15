@@ -12,6 +12,7 @@ from app.config import Config
 from app.utils.english_subscribe import SUBSCRIPTION_TIMES as ENGLISH_TIMES, subscription_manager
 from app.utils.english_words import get_english_words
 from app.utils.medication import common_times, get_medications_by_time
+from app.utils.other_reminder import other_reminder_common_times, get_other_reminders_by_time
 from app.utils.theme import COLOR_THEME
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,9 @@ def init_scheduler():
 
     # 用藥管理排程
     _setup_medication_schedule(scheduler)
+
+    # 其他提醒排程
+    _setup_other_reminder_schedule(scheduler)
 
     scheduler.start()
     logger.info("All language schedulers have been started")
@@ -241,3 +245,69 @@ def send_medication_notification(time_str):
             logger.info(f"成功推播用藥提醒給 {user_id}：{med_name}")
         except Exception as e:
             logger.error(f"推播用藥提醒失敗 {user_id}：{med_name}，錯誤：{e}")
+
+
+def _setup_other_reminder_schedule(scheduler):
+    for time_str in other_reminder_common_times:
+        try:
+            hour, minute = map(int, time_str.split(':'))
+            scheduler.add_job(
+                func=send_other_reminder_notification,
+                trigger=CronTrigger(hour=hour, minute=minute),
+                args=[time_str],
+                id=f'other_reminder_{time_str.replace(":", "")}',
+                name=f'Other Reminder Schedule - {time_str}',
+                replace_existing=True
+            )
+            logger.info(f"Successfully set other reminder schedule: Daily at {time_str}")
+        except Exception as e:
+            logger.error(f"Error setting up other reminder schedule {time_str}: {e}")
+
+def send_other_reminder_notification(time_str):
+    for user_id, content in get_other_reminders_by_time(time_str):
+        try:
+            data_str = f"action=other_reminder_confirm&user_id={user_id}&content={content}&time={time_str}"
+            message = FlexSendMessage(
+                alt_text="⏰ 其他提醒",
+                contents=BubbleContainer(
+                    body=BoxComponent(
+                        layout="vertical",
+                        contents=[
+                            TextComponent(text="⏰ 其他提醒", weight="bold", size="xl", color=COLOR_THEME['text_primary']),
+                            TextComponent(text=f"提醒內容：{content}", size="md", color=COLOR_THEME['text_secondary']),
+                            TextComponent(text=f"時間：{time_str}", size="sm", color=COLOR_THEME['text_hint']),
+                        ],
+                        background_color=COLOR_THEME['card'],
+                        padding_all="lg"
+                    ),
+                    footer=BoxComponent(
+                        layout="vertical",
+                        contents=[
+                            ButtonComponent(
+                                action=PostbackAction(
+                                    label="我已完成",
+                                    data=data_str
+                                ),
+                                style="primary",
+                                color=COLOR_THEME['primary'],
+                                height="sm"
+                            )
+                        ],
+                        margin="sm",
+                        background_color=COLOR_THEME['card'],
+                        padding_all="lg"
+                    ),
+                    styles={
+                        "body": {"backgroundColor": COLOR_THEME['card']},
+                        "footer": {"backgroundColor": COLOR_THEME['card']}
+                    }
+                )
+            )
+            send_line_message_push(
+                Config.LINE_CHANNEL_ACCESS_TOKEN,
+                user_id,
+                message
+            )
+            logger.info(f"成功推播其他提醒給 {user_id}：{content}")
+        except Exception as e:
+            logger.error(f"推播其他提醒失敗 {user_id}：{content}，錯誤：{e}")

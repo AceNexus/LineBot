@@ -38,6 +38,12 @@ from app.utils.medication import (
 from app.utils.menu import get_menu
 from app.utils.movie import get_movies
 from app.utils.news import get_news_topic_menu, get_news_count_menu, get_news
+from app.utils.other_reminder import (
+    get_other_reminder_menu, get_other_reminder_list_flex, get_today_other_reminder_records,
+    delete_other_reminder, start_add_other_reminder, is_adding_other_reminder,
+    set_other_reminder_content, finish_add_other_reminder, cancel_add_other_reminder, get_add_other_reminder_step,
+    mark_other_reminder_done
+)
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +148,48 @@ def handle_postback(event):
         elif action == 'cancel_add_medication':
             cancel_add_medication(chat_id)
             response = TextSendMessage(text="已取消新增藥品")
+        elif action == 'other_reminder_menu':
+            response = get_other_reminder_menu()
+        elif action == 'other_reminder_list':
+            response = get_other_reminder_list_flex(chat_id)
+        elif action == 'other_reminder_today':
+            response = get_today_other_reminder_records(chat_id)
+        elif action.startswith('delete_other_reminder_'):
+            rem_id = int(action.replace('delete_other_reminder_', ''))
+            success = delete_other_reminder(chat_id, rem_id)
+            if success:
+                response = [
+                    TextSendMessage(text="提醒已刪除"),
+                    get_other_reminder_list_flex(chat_id)
+                ]
+            else:
+                response = TextSendMessage(text="刪除失敗，請重試")
+        elif action == 'start_add_other_reminder':
+            start_add_other_reminder(chat_id)
+            response = TextSendMessage(text="請輸入提醒內容：")
+        elif action.startswith('add_other_reminder_time='):
+            time = action.replace('add_other_reminder_time=', '')
+            success, message = finish_add_other_reminder(chat_id, time)
+            if success:
+                response = [
+                    TextSendMessage(text=message),
+                    get_other_reminder_list_flex(chat_id)
+                ]
+            else:
+                response = TextSendMessage(text=message)
+        elif action == 'other_reminder_confirm':
+            user_id = data.get('user_id', [chat_id])[0]
+            content = data.get('content', [''])[0]
+            time_str = data.get('time', [''])[0]
+            today = datetime.now().strftime("%Y-%m-%d")
+            mark_other_reminder_done(user_id, content, time_str, today)
+            reply_to_user(event.reply_token, TextSendMessage(text="已記錄您完成提醒！"))
+            return
+        elif action == 'custom_time_other_reminder':
+            response = TextSendMessage(text="請輸入自訂時間（格式：HH:MM，例如 08:30）：")
+        elif action == 'cancel_add_other_reminder':
+            cancel_add_other_reminder(chat_id)
+            response = TextSendMessage(text="已取消新增提醒")
         else:
             response = TextSendMessage(text="這功能正在裝上輪子，還在趕來的路上")
 
@@ -184,6 +232,30 @@ def process_text_message(event):
                     reply_to_user(event.reply_token, [
                         TextSendMessage(text=message),
                         get_medication_list_flex(chat_id)
+                    ])
+                else:
+                    reply_to_user(event.reply_token, TextSendMessage(text=message))
+                return
+
+        # 新增其他提醒互動流程
+        if is_adding_other_reminder(chat_id):
+            step = get_add_other_reminder_step(chat_id)
+            if step == 1:
+                content = message_text.strip()
+                if not content:
+                    reply_to_user(event.reply_token, TextSendMessage(text="提醒內容不能為空，請重新輸入："))
+                    return
+                set_other_reminder_content(chat_id, content)
+                from app.utils.other_reminder import get_time_select_menu_other_reminder
+                reply_to_user(event.reply_token, get_time_select_menu_other_reminder(chat_id))
+                return
+            elif step == 2:
+                time = message_text.strip()
+                success, message = finish_add_other_reminder(chat_id, time)
+                if success:
+                    reply_to_user(event.reply_token, [
+                        TextSendMessage(text=message),
+                        get_other_reminder_list_flex(chat_id)
                     ])
                 else:
                     reply_to_user(event.reply_token, TextSendMessage(text=message))
