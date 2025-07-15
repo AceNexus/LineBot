@@ -140,10 +140,8 @@ def get_other_reminder_menu():
         footer=BoxComponent(
             layout="vertical",
             contents=[
-                create_button("提醒清單", "other_reminder_list", COLOR_THEME['primary'],
-                              display_text="其他提醒：查看提醒清單"),
-                create_button("今日記錄", "other_reminder_today", COLOR_THEME['info'],
-                              display_text="其他提醒：查看今日記錄")
+                create_button("提醒清單", "other_reminder_list", COLOR_THEME['primary'], display_text="其他提醒：查看提醒清單"),
+                create_button("今日記錄", "other_reminder_today", COLOR_THEME['info'], display_text="其他提醒：查看今日記錄")
             ],
             spacing="sm",
             padding_all="lg",
@@ -159,8 +157,7 @@ def get_other_reminder_menu():
 
 def get_other_reminder_list_flex(user_id):
     rems = get_other_reminders(user_id)
-    add_button = create_button("➕ 新增提醒", "start_add_other_reminder", COLOR_THEME['success'],
-                               display_text="其他提醒：新增提醒")
+    add_button = create_button("➕ 新增提醒", "start_add_other_reminder", COLOR_THEME['success'], display_text="其他提醒：新增提醒")
     if not rems:
         bubble = BubbleContainer(
             body=BoxComponent(
@@ -221,8 +218,7 @@ def get_other_reminder_list_flex(user_id):
                             ],
                             flex=4
                         ),
-                        create_button("⨉", f"delete_other_reminder_{rem['id']}", COLOR_THEME['error'], flex=1,
-                                      display_text=f"其他提醒：刪除提醒 {rem['content']}")
+                        create_button("⨉", f"delete_other_reminder_{rem['id']}", COLOR_THEME['error'], flex=1, display_text=f"其他提醒：刪除提醒 {rem['content']}")
                     ],
                     margin="md",
                     padding_all="sm"
@@ -327,12 +323,7 @@ def get_time_select_menu_other_reminder(user_id=None):
             create_button(f"{time}", f"add_other_reminder_time={time}", COLOR_THEME['primary'],
                           display_text=f"其他提醒：設定提醒時間 {time}"))
     buttons.append(
-        create_button("其他時間", "custom_time_other_reminder", COLOR_THEME['info'],
-                      display_text="其他提醒：自訂提醒時間")
-    )
-    buttons.append(
-        create_button("取消", "cancel_add_other_reminder", COLOR_THEME['error'], display_text="其他提醒：取消新增提醒")
-    )
+        create_button("取消", "cancel_add_other_reminder", COLOR_THEME['error'], display_text="其他提醒：取消新增提醒"))
     bubble = BubbleContainer(
         body=BoxComponent(
             layout="vertical",

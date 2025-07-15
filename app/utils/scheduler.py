@@ -6,7 +6,7 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from linebot.models import FlexSendMessage, BubbleContainer, BoxComponent, TextComponent, ButtonComponent, \
-    PostbackAction
+    PostbackAction, SeparatorComponent
 
 from app.config import Config
 from app.utils.english_subscribe import SUBSCRIPTION_TIMES as ENGLISH_TIMES, subscription_manager
@@ -207,7 +207,8 @@ def send_medication_notification(time_str):
                     body=BoxComponent(
                         layout="vertical",
                         contents=[
-                            TextComponent(text="💊 用藥提醒", weight="bold", size="xl", color=COLOR_THEME['text_primary']),
+                            TextComponent(text="💊 用藥提醒", weight="bold", size="xl",
+                                          color=COLOR_THEME['text_primary']),
                             TextComponent(text=f"藥品：{med_name}", size="md", color=COLOR_THEME['text_secondary']),
                             TextComponent(text=f"時間：{time_str}", size="sm", color=COLOR_THEME['text_hint']),
                         ],
@@ -263,19 +264,34 @@ def _setup_other_reminder_schedule(scheduler):
         except Exception as e:
             logger.error(f"Error setting up other reminder schedule {time_str}: {e}")
 
+
 def send_other_reminder_notification(time_str):
     for user_id, content in get_other_reminders_by_time(time_str):
         try:
             data_str = f"action=other_reminder_confirm&user_id={user_id}&content={content}&time={time_str}"
             message = FlexSendMessage(
-                alt_text="⏰ 其他提醒",
+                alt_text="提醒通知",
                 contents=BubbleContainer(
                     body=BoxComponent(
                         layout="vertical",
                         contents=[
-                            TextComponent(text="⏰ 其他提醒", weight="bold", size="xl", color=COLOR_THEME['text_primary']),
-                            TextComponent(text=f"提醒內容：{content}", size="md", color=COLOR_THEME['text_secondary']),
-                            TextComponent(text=f"時間：{time_str}", size="sm", color=COLOR_THEME['text_hint']),
+                            TextComponent(
+                                text="提醒通知",
+                                weight="bold",
+                                size="xl",
+                                color=COLOR_THEME['text_secondary'],
+                                align="center",
+                                margin="md"
+                            ),
+                            SeparatorComponent(margin="md", color=COLOR_THEME['separator']),
+                            TextComponent(
+                                text = f"提醒事項：{content}",
+                                size="md",
+                                color=COLOR_THEME['text_primary'],
+                                weight="bold",
+                                wrap=True,
+                                margin="lg"
+                            ),
                         ],
                         background_color=COLOR_THEME['card'],
                         padding_all="lg"
