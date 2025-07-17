@@ -69,7 +69,8 @@ def get_menu():
         create_button("英文訂閱", "english_subscribe", COLOR_THEME['primary'], emoji="📅", display_text="功能選單：英文訂閱"),
         create_button("用藥管理", "medication_menu", COLOR_THEME['info'], emoji="💊", display_text="功能選單：用藥管理"),
         create_button("其他提醒", "other_reminder_menu", COLOR_THEME['primary'], emoji="⏰", display_text="功能選單：其他提醒"),
-        create_button("AI 回應開關", "toggle_ai", COLOR_THEME['info'], emoji="🤖", display_text="功能選單：切換 AI 回應開關")
+        create_button("推播額度", "check_push_quota", COLOR_THEME['info'], emoji="📊", display_text="功能選單：推播額度"),
+        create_button("AI 回應開關", "toggle_ai", COLOR_THEME['primary'], emoji="🤖", display_text="功能選單：切換 AI 回應開關")
     ]
 
     footer_box = BoxComponent(

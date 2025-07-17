@@ -44,6 +44,7 @@ from app.utils.other_reminder import (
     set_other_reminder_content, finish_add_other_reminder, cancel_add_other_reminder, get_add_other_reminder_step,
     mark_other_reminder_done
 )
+from app.utils.push_quota import get_line_push_quota_flex
 
 logger = logging.getLogger(__name__)
 
@@ -190,6 +191,12 @@ def handle_postback(event):
         elif action == 'cancel_add_other_reminder':
             cancel_add_other_reminder(chat_id)
             response = TextSendMessage(text="已取消新增提醒")
+        elif action == 'check_push_quota':
+            result = get_line_push_quota_flex()
+            if isinstance(result, str):
+                response = TextSendMessage(text=result)
+            else:
+                response = result
         else:
             response = TextSendMessage(text="這功能正在裝上輪子，還在趕來的路上")
 
