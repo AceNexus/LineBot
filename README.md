@@ -101,7 +101,7 @@ linebot/
 1. **Clone 儲存庫**
 
    ```bash
-   git clone git@github.com:AceNexus/LineBot.git
+   git clone https://github.com/AceNexus/LineBot.git
    cd LineBot
    ```
 
